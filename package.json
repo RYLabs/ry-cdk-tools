@@ -1,5 +1,5 @@
 {
-  "name": "ry-cdk-tools",
+  "name": "@rylabs/ry-cdk-tools",
   "version": "0.0.1",
   "description": "Tools or working with the AWS CDK",
   "repository": "git@github.com:RYLabs/ry-cdk-tools.git",
