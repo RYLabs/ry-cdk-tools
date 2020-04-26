@@ -1,10 +1,12 @@
-import { App, SecretValue } from "@aws-cdk/core";
+import { App, SecretValue, RemovalPolicy } from "@aws-cdk/core";
 import BaseStack, { BaseStackProps } from "./base_stack";
 import { Pipeline, Artifact } from "@aws-cdk/aws-codepipeline";
 import {
   GitHubSourceAction,
   GitHubTrigger,
 } from "@aws-cdk/aws-codepipeline-actions";
+import { Key, Alias } from "@aws-cdk/aws-kms";
+import { Bucket, BucketEncryption, BlockPublicAccess } from "@aws-cdk/aws-s3";
 
 export interface BasePipelineStackProps extends BaseStackProps {
   ownerName: string;
@@ -32,6 +34,7 @@ export default class BasePipelineStack extends BaseStack {
     const githubRepoOutput = new Artifact();
 
     const pl = new Pipeline(this, "pipeline", {
+      artifactBucket: this.createArtifactsBucket(),
       stages: [
         {
           stageName: "Source",
@@ -54,5 +57,41 @@ export default class BasePipelineStack extends BaseStack {
 
     this.pipeline = pl;
     this.githubRepoArtifact = githubRepoOutput;
+  }
+
+  // Override the default artifacts implementation and set the bucket name
+  // default removal policy to destroy
+  private createArtifactsBucket() {
+    const encryptionKey = new Key(this, "ArtifactsBucketEncryptionKey", {
+      // remove the key - there is a grace period of a few days before it's gone for good,
+      // that should be enough for any emergency access to the bucket artifacts
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+    const artifactBucket = new Bucket(this, "ArtifactsBucket", {
+      bucketName: `${this.conventions.eqn("camel")}PipelineArtifacts`,
+      encryptionKey,
+      encryption: BucketEncryption.KMS,
+      blockPublicAccess: new BlockPublicAccess(BlockPublicAccess.BLOCK_ALL),
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+    // add an alias to make finding the key in the console easier
+    new Alias(this, "ArtifactsBucketEncryptionKeyAlias", {
+      aliasName: this.generateNameForDefaultBucketKeyAlias(),
+      targetKey: encryptionKey,
+      removalPolicy: RemovalPolicy.DESTROY, // destroy the alias along with the key
+    });
+    return artifactBucket;
+  }
+
+  private generateNameForDefaultBucketKeyAlias(): string {
+    const prefix = "alias/codepipeline-";
+    const maxAliasLength = 256;
+    const uniqueId = this.node.uniqueId;
+    // take the last 256 - (prefix length) characters of uniqueId
+    const startIndex = Math.max(
+      0,
+      uniqueId.length - (maxAliasLength - prefix.length)
+    );
+    return prefix + uniqueId.substring(startIndex).toLowerCase();
   }
 }

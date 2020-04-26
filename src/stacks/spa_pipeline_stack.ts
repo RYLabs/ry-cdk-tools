@@ -1,4 +1,4 @@
-import { App, CfnOutput } from "@aws-cdk/core";
+import { App, CfnOutput, RemovalPolicy } from "@aws-cdk/core";
 import BasePipelineStack, {
   BasePipelineStackProps,
 } from "../base_stacks/base_pipeline_stack";
@@ -34,6 +34,7 @@ export default class SPAPipelineStack extends BasePipelineStack {
       websiteIndexDocument: "index.html",
       websiteErrorDocument: "index.html",
       publicReadAccess: true,
+      removalPolicy: RemovalPolicy.DESTROY,
     });
 
     const outputWebsite = new Artifact();

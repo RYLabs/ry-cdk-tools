@@ -361,7 +361,7 @@
     "@aws-cdk/region-info" "1.35.0"
     constructs "^3.0.2"
 
-"@aws-cdk/aws-kms@1.35.0":
+"@aws-cdk/aws-kms@1.35.0", "@aws-cdk/aws-kms@^1.35.0":
   version "1.35.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-kms/-/aws-kms-1.35.0.tgz#0c15474e07ad0286203d20e7c502ca5c1d3efb05"
   integrity sha512-w67cd3vG/6vHz/v2/Ow+iAHjn5jm3yhrbYUMbVc7CfPU//g9N70fV6mohKT+zdyoCSgrZ0WXlHRd64jPe8sutg==
@@ -438,7 +438,7 @@
     "@aws-cdk/cx-api" "1.35.0"
     constructs "^3.0.2"
 
-"@aws-cdk/aws-s3@1.35.0":
+"@aws-cdk/aws-s3@1.35.0", "@aws-cdk/aws-s3@^1.35.0":
   version "1.35.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-s3/-/aws-s3-1.35.0.tgz#074b97be9a4bc87446a7cfa954ece94981ea9839"
   integrity sha512-GRiL1yjWi0tlhPERAFGaOuOtX5E/1HhC8Tpbxg/6idpZJMoA+zRSYs0+Nd0U09kO+LqAecS8GmOqCxN9BpupMw==
