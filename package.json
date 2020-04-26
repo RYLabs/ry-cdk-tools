@@ -1,0 +1,38 @@
+{
+  "name": "ry-cdk-tools",
+  "version": "0.0.1",
+  "description": "Tools or working with the AWS CDK",
+  "repository": "git@github.com:RYLabs/ry-cdk-tools.git",
+  "author": "Calvin Yu <calvin@rylabs.io>",
+  "license": "MIT",
+  "files": [
+    "lib/**/*"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "format": "prettier --write \"src/**/*.ts\"",
+    "build": "tsc",
+    "prepare": "yarn run build",
+    "version": "yarn run format && git add -A src",
+    "postversion": "git push && git push --tags"
+  },
+  "devDependencies": {
+    "@aws-cdk/aws-codepipeline": "^1.35.0",
+    "@aws-cdk/aws-codepipeline-actions": "^1.35.0",
+    "@aws-cdk/core": "^1.35.0",
+    "prettier": "^2.0.5",
+    "typescript": "^3.8.3"
+  },
+  "peerDependencies": {
+    "@aws-cdk/aws-codebuild": ">=1.32.2 <2",
+    "@aws-cdk/aws-codecommit": ">=1.32.2 <2",
+    "@aws-cdk/aws-codepipeline": ">=1.32.2 <2",
+    "@aws-cdk/aws-ec2": ">=1.32.2 <2",
+    "@aws-cdk/aws-elasticbeanstalk": ">=1.32.2 <2",
+    "@aws-cdk/aws-rds": ">=1.32.2 <2",
+    "@aws-cdk/aws-s3": ">=1.32.2 <2",
+    "@aws-cdk/aws-secretsmanager": ">=1.32.2 <2",
+    "@aws-cdk/core": ">=1.32.2 <2"
+  }
+}
