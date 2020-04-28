@@ -1,2 +1,4 @@
 import SPAPipelineStack from "./stacks/spa_pipeline_stack";
-export { SPAPipelineStack };
+import VpcStack from "./stacks/vpc_stack";
+import RdsStack from "./stacks/rds_stack";
+export { RdsStack, SPAPipelineStack, VpcStack };
