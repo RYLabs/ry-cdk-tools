@@ -1,6 +1,6 @@
 {
   "name": "@rylabs/ry-cdk-tools",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Tools or working with the AWS CDK",
   "repository": "git@github.com:RYLabs/ry-cdk-tools.git",
   "author": "Calvin Yu <calvin@rylabs.io>",
@@ -21,6 +21,7 @@
     "@aws-cdk/aws-codepipeline": "^1.35.0",
     "@aws-cdk/aws-codepipeline-actions": "^1.35.0",
     "@aws-cdk/aws-kms": "^1.35.0",
+    "@aws-cdk/aws-rds": "^1.35.0",
     "@aws-cdk/aws-s3": "^1.35.0",
     "@aws-cdk/core": "^1.35.0",
     "prettier": "^2.0.5",
@@ -37,5 +38,9 @@
     "@aws-cdk/aws-s3": ">=1.35.2 <2",
     "@aws-cdk/aws-secretsmanager": ">=1.35.2 <2",
     "@aws-cdk/core": ">=1.35.2 <2"
+  },
+  "dependencies": {
+    "@types/lodash": "^4.14.150",
+    "lodash": "^4.17.15"
   }
 }
