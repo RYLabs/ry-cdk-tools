@@ -3,7 +3,7 @@ import { Vpc, IVpc } from "@aws-cdk/aws-ec2";
 import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
 
 export interface VpcStackProps extends BaseStackProps {
-  maxAzs: number;
+  maxAzs?: number;
 }
 
 export default class VpcStack extends BaseStack {
