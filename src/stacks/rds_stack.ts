@@ -30,6 +30,7 @@ export interface RdsStackProps extends BaseStackProps {
   engineVersion?: string;
   masterUsername?: string;
   masterUserPassword?: SecretValue;
+  allocatedStorage?: number;
   storageEncrypted?: boolean;
   preferredBackupWindow?: string;
   preferredMaintenanceWindow?: string;
@@ -102,6 +103,7 @@ export default class RdsStack extends BaseStack {
       // defined by CDK.
       ...pick(
         props,
+        "allocatedStorage",
         "engineVersion",
         "storageEncrypted",
         "preferredBackupWindow",
