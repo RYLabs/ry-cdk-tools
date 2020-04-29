@@ -13,62 +13,26 @@ export interface BasePipelineStackProps extends BaseStackProps {
   repoName?: string;
   branchName?: string;
   githubOAuthToken?: SecretValue;
+  bucketName: string; // Needed to remove identical bucket names
 }
 
 export default class BasePipelineStack extends BaseStack {
   pipeline: Pipeline;
   githubRepoArtifact: Artifact;
 
-  constructor(scope: App, id: string, props: BasePipelineStackProps) {
-    super(scope, id, props);
-
-    const {
-      appName,
-      repoName,
-      ownerName,
-      branchName = "master",
-      githubOAuthToken,
-    } = props;
-
-    const secretKey = `${this.conventions.eqn("camel")}GithubOAuthToken`;
-    const githubRepoOutput = new Artifact();
-
-    const pl = new Pipeline(this, "pipeline", {
-      artifactBucket: this.createArtifactsBucket(),
-      stages: [
-        {
-          stageName: "Source",
-          actions: [
-            new GitHubSourceAction({
-              actionName: "githubRepo_Source",
-              repo: repoName || appName,
-              owner: ownerName,
-              branch: branchName,
-              oauthToken:
-                githubOAuthToken ||
-                SecretValue.secretsManager(secretKey, { jsonField: secretKey }),
-              output: githubRepoOutput,
-              trigger: GitHubTrigger.WEBHOOK,
-            }),
-          ],
-        },
-      ],
-    });
-
-    this.pipeline = pl;
-    this.githubRepoArtifact = githubRepoOutput;
-  }
-
   // Override the default artifacts implementation and set the bucket name
   // default removal policy to destroy
-  private createArtifactsBucket() {
+  private createArtifactsBucket(bucketName: string) : Bucket {
     const encryptionKey = new Key(this, "ArtifactsBucketEncryptionKey", {
       // remove the key - there is a grace period of a few days before it's gone for good,
       // that should be enough for any emergency access to the bucket artifacts
       removalPolicy: RemovalPolicy.DESTROY,
     });
+
+    // here is where bucketName is required for unique names
+    // too long an app name or env will cause name length error 
     const artifactBucket = new Bucket(this, "ArtifactsBucket", {
-      bucketName: `${this.conventions.eqn("camel")}PipelineArtifacts`,
+      bucketName: `${bucketName}-pl-artifacts`, 
       encryptionKey,
       encryption: BucketEncryption.KMS,
       blockPublicAccess: new BlockPublicAccess(BlockPublicAccess.BLOCK_ALL),
@@ -94,4 +58,46 @@ export default class BasePipelineStack extends BaseStack {
     );
     return prefix + uniqueId.substring(startIndex).toLowerCase();
   }
+
+  constructor(scope: App, id: string, props: BasePipelineStackProps) {
+    super(scope, id, props);
+
+    const {
+      appName,
+      repoName,
+      ownerName,
+      branchName = "master",
+      githubOAuthToken,
+      bucketName,
+    } = props;
+
+    const secretKey = `${this.conventions.eqn("camel")}GithubOAuthToken`;
+    const githubRepoOutput = new Artifact();
+
+    const pl = new Pipeline(this, "pipeline", {
+      artifactBucket: this.createArtifactsBucket(bucketName),
+      stages: [
+        {
+          stageName: "Source",
+          actions: [
+            new GitHubSourceAction({
+              actionName: "githubRepo_Source",
+              repo: repoName || appName,
+              owner: ownerName,
+              branch: branchName,
+              oauthToken:
+                githubOAuthToken ||
+                SecretValue.secretsManager(secretKey, { jsonField: secretKey }),
+              output: githubRepoOutput,
+              trigger: GitHubTrigger.WEBHOOK,
+            }),
+          ],
+        },
+      ],
+    });
+
+    this.pipeline = pl;
+    this.githubRepoArtifact = githubRepoOutput;
+  }
+  
 }

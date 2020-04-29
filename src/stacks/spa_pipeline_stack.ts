@@ -20,13 +20,16 @@ export interface SPAPipelineStackProps extends BasePipelineStackProps {
 
 export default class SPAPipelineStack extends BasePipelineStack {
   constructor(scope: App, id: string, props: SPAPipelineStackProps) {
-    super(scope, id, props);
+    super(scope, id, {
+      description: `Pipeline, Build & Deploy to S3 bucket for ${props.appName}-${props.appEnvironment} SPA Application`,
+      ...props,
+    });
 
     const { appName, appEnvironment } = props;
     const {
       subDomain = isProduction(appEnvironment)
         ? appName
-        : this.conventions.eqn(),
+        : this.conventions.eqn("dash"),
     } = props;
 
     const bucketWebsite = new Bucket(this, "siteBucket", {
@@ -40,7 +43,7 @@ export default class SPAPipelineStack extends BasePipelineStack {
     const outputWebsite = new Artifact();
 
     const project = new PipelineProject(this, "project", {
-      projectName: `${this.conventions.eqn()}-spa`,
+      projectName: `${this.conventions.eqn("dash")}-spa`,
       buildSpec: BuildSpec.fromSourceFilename("./buildspec.yml"),
     });
 
