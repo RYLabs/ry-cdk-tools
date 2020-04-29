@@ -1,4 +1,8 @@
-import SPAPipelineStack from "./stacks/spa_pipeline_stack";
-import VpcStack from "./stacks/vpc_stack";
-import RdsStack from "./stacks/rds_stack";
-export { RdsStack, SPAPipelineStack, VpcStack };
+export { default as SPAPipelineStack } from "./stacks/spa_pipeline_stack";
+export * from "./stacks/spa_pipeline_stack";
+
+export { default as VpcStack } from "./stacks/vpc_stack";
+export * from "./stacks/vpc_stack";
+
+export { default as RdsStack } from "./stacks/rds_stack";
+export * from "./stacks/rds_stack";
