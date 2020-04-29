@@ -14,12 +14,12 @@ function isProduction(env: string) {
   return env === "prod" || env === "production";
 }
 
-export interface SPAPipelineStackProps extends BasePipelineStackProps {
+export interface SpaPipelineStackProps extends BasePipelineStackProps {
   subDomain?: string;
 }
 
-export default class SPAPipelineStack extends BasePipelineStack {
-  constructor(scope: App, id: string, props: SPAPipelineStackProps) {
+export default class SpaPipelineStack extends BasePipelineStack {
+  constructor(scope: App, id: string, props: SpaPipelineStackProps) {
     super(scope, id, {
       description: `Pipeline, Build & Deploy to S3 bucket for ${props.appName}-${props.appEnvironment} SPA Application`,
       ...props,
