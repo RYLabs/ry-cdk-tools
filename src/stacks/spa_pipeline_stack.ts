@@ -25,7 +25,7 @@ export default class SpaPipelineStack extends BasePipelineStack {
       ...props,
     });
 
-    const { appName, appEnvironment } = props;
+    const { appName = id, appEnvironment } = props;
     const {
       subDomain = isProduction(appEnvironment)
         ? appName
@@ -33,7 +33,7 @@ export default class SpaPipelineStack extends BasePipelineStack {
     } = props;
 
     const bucketWebsite = new Bucket(this, "siteBucket", {
-      bucketName: subDomain,
+      bucketName: subDomain.toLowerCase(),
       websiteIndexDocument: "index.html",
       websiteErrorDocument: "index.html",
       publicReadAccess: true,
