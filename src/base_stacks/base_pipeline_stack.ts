@@ -70,7 +70,7 @@ export default class BasePipelineStack extends BaseStack {
       githubOAuthToken,
 
       // Use id to avoid bucket name conflicts
-      artifactBucketName = `${id}-pl-artifacts`,
+      artifactBucketName = `${id.toLowerCase()}-pl-artifacts`,
     } = props;
 
     const secretKey = `${this.conventions.eqn("camel")}GithubOAuthToken`;
