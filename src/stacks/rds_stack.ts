@@ -69,7 +69,7 @@ export default class RdsStack extends BaseStack {
             // RDS doesn't like @ / or \ values.  Elasticbeanstalk will choke on
             // backticks, so to be safe we're just going to avoid all quote
             // characters.
-            excludeCharacters: "\"'`@/\\",
+            excludeCharacters: "{}[]\"'`@/\\",
 
             passwordLength: 16,
             secretStringTemplate: JSON.stringify({
