@@ -9,12 +9,6 @@
     "lib/**/*"
   ],
   "main": "lib/index.js",
-  "exports": {
-    ".": "lib/index.js",
-    "./vpc": "lib/vpc.js",
-    "./rds": "lib/rds.js",
-    "./spa": "lib/spa.js"
-  },
   "types": "lib/index.d.ts",
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\"",
