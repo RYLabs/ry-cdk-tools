@@ -13,7 +13,7 @@ export interface BasePipelineStackProps extends BaseStackProps {
   repoName?: string;
   branchName?: string;
   githubOAuthToken?: SecretValue;
-  bucketName: string; // Needed to remove identical bucket names
+  artifactBucketName?: string;
 }
 
 export default class BasePipelineStack extends BaseStack {
@@ -22,7 +22,7 @@ export default class BasePipelineStack extends BaseStack {
 
   // Override the default artifacts implementation and set the bucket name
   // default removal policy to destroy
-  private createArtifactsBucket(bucketName: string) : Bucket {
+  private createArtifactsBucket(bucketName: string): Bucket {
     const encryptionKey = new Key(this, "ArtifactsBucketEncryptionKey", {
       // remove the key - there is a grace period of a few days before it's gone for good,
       // that should be enough for any emergency access to the bucket artifacts
@@ -30,9 +30,9 @@ export default class BasePipelineStack extends BaseStack {
     });
 
     // here is where bucketName is required for unique names
-    // too long an app name or env will cause name length error 
+    // too long an app name or env will cause name length error
     const artifactBucket = new Bucket(this, "ArtifactsBucket", {
-      bucketName: `${bucketName}-pl-artifacts`, 
+      bucketName,
       encryptionKey,
       encryption: BucketEncryption.KMS,
       blockPublicAccess: new BlockPublicAccess(BlockPublicAccess.BLOCK_ALL),
@@ -68,14 +68,16 @@ export default class BasePipelineStack extends BaseStack {
       ownerName,
       branchName = "master",
       githubOAuthToken,
-      bucketName,
+
+      // Use id to avoid bucket name conflicts
+      artifactBucketName = `${id}-pl-artifacts`,
     } = props;
 
     const secretKey = `${this.conventions.eqn("camel")}GithubOAuthToken`;
     const githubRepoOutput = new Artifact();
 
     const pl = new Pipeline(this, "pipeline", {
-      artifactBucket: this.createArtifactsBucket(bucketName),
+      artifactBucket: this.createArtifactsBucket(artifactBucketName),
       stages: [
         {
           stageName: "Source",
@@ -99,5 +101,4 @@ export default class BasePipelineStack extends BaseStack {
     this.pipeline = pl;
     this.githubRepoArtifact = githubRepoOutput;
   }
-  
 }
