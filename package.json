@@ -1,6 +1,6 @@
 {
   "name": "@rylabs/ry-cdk-tools",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Tools or working with the AWS CDK",
   "repository": "git@github.com:RYLabs/ry-cdk-tools.git",
   "author": "Calvin Yu <calvin@rylabs.io>",
@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "@types/lodash": "^4.14.150",
+    "@types/node": "^13.13.4",
     "lodash": "^4.17.15"
   }
 }
