@@ -7,7 +7,7 @@ export interface VpcStackProps extends BaseStackProps {
 }
 
 export default class VpcStack extends BaseStack {
-  vpc: IVpc;
+  vpc: Vpc;
 
   constructor(scope: App, id: string, props: VpcStackProps) {
     super(scope, id, {

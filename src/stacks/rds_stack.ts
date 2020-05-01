@@ -38,11 +38,11 @@ export interface RdsStackProps extends BaseStackProps {
 }
 
 export default class RdsStack extends BaseStack {
-  dbInstance: IDatabaseInstance;
+  dbInstance: DatabaseInstance;
   masterUsername: string;
   masterPassword: SecretValue;
   databaseName: string;
-  securityGroup: ISecurityGroup;
+  securityGroup: SecurityGroup;
 
   constructor(scope: App, id: string, props: RdsStackProps) {
     super(scope, id, {
