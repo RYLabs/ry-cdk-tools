@@ -15,16 +15,24 @@
     "build": "tsc",
     "prepare": "yarn run build",
     "version": "yarn run format && git add -A src",
-    "postversion": "git push && git push --tags"
+    "postversion": "git push && git push --tags",
+    "test": "jest"
+  },
+  "jest": {
+    "preset": "ts-jest"
   },
   "devDependencies": {
+    "@aws-cdk/assert": "1.35.0",
     "@aws-cdk/aws-codepipeline": "1.35.0",
     "@aws-cdk/aws-codepipeline-actions": "1.35.0",
     "@aws-cdk/aws-kms": "1.35.0",
     "@aws-cdk/aws-rds": "1.35.0",
     "@aws-cdk/aws-s3": "1.35.0",
     "@aws-cdk/core": "1.35.0",
+    "@types/jest": "^25.2.1",
+    "jest": "^25.5.3",
     "prettier": "^2.0.5",
+    "ts-jest": "^25.4.0",
     "typescript": "^3.8.3"
   },
   "peerDependencies": {

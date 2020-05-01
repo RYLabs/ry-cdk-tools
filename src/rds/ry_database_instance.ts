@@ -1,8 +1,4 @@
-import {
-  DatabaseInstance,
-  DatabaseInstanceProps,
-  DatabaseInstanceEngine,
-} from "@aws-cdk/aws-rds";
+import { DatabaseInstance, DatabaseInstanceProps } from "@aws-cdk/aws-rds";
 import { SecretValue, Construct, Duration } from "@aws-cdk/core";
 import {
   SecurityGroup,
@@ -20,7 +16,7 @@ export const instanceDefaults = {
 
 export type AltDatabaseInstanceProps = Omit<
   DatabaseInstanceProps,
-  "masterUsername"
+  "masterUsername" | "instanceClass"
 >;
 
 export type BaseRyDatabaseInstanceProps = Omit<
@@ -31,6 +27,7 @@ export type BaseRyDatabaseInstanceProps = Omit<
 export interface RyDatabaseInstanceProps extends AltDatabaseInstanceProps {
   readonly conventions: Conventions;
   readonly masterUsername?: string;
+  readonly instanceClass?: InstanceType;
 }
 
 export default class RyDatabaseInstance extends DatabaseInstance {
@@ -71,7 +68,6 @@ export default class RyDatabaseInstance extends DatabaseInstance {
 
       databaseName = conventions.eqn("underscore"),
       instanceIdentifier = conventions.eqn(),
-      engine,
     } = props;
 
     super(scope, id, {
