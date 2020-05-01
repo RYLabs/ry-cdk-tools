@@ -1,4 +1,4 @@
-import { App, SecretValue, RemovalPolicy } from "@aws-cdk/core";
+import { SecretValue, RemovalPolicy, Construct } from "@aws-cdk/core";
 import BaseStack, { BaseStackProps } from "./base_stack";
 import { Pipeline, Artifact } from "@aws-cdk/aws-codepipeline";
 import {
@@ -59,7 +59,7 @@ export default class BasePipelineStack extends BaseStack {
     return prefix + uniqueId.substring(startIndex).toLowerCase();
   }
 
-  constructor(scope: App, id: string, props: BasePipelineStackProps) {
+  constructor(scope: Construct, id: string, props: BasePipelineStackProps) {
     super(scope, id, props);
 
     const {

@@ -1,5 +1,5 @@
-import { App } from "@aws-cdk/core";
-import { Vpc, IVpc } from "@aws-cdk/aws-ec2";
+import { Construct } from "@aws-cdk/core";
+import { Vpc } from "@aws-cdk/aws-ec2";
 import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
 
 export interface VpcStackProps extends BaseStackProps {
@@ -9,7 +9,7 @@ export interface VpcStackProps extends BaseStackProps {
 export default class VpcStack extends BaseStack {
   vpc: Vpc;
 
-  constructor(scope: App, id: string, props: VpcStackProps) {
+  constructor(scope: Construct, id: string, props: VpcStackProps) {
     super(scope, id, {
       description: `VPC for the ${id} ${props.appEnvironment} environment`,
       ...props,

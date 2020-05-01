@@ -1,4 +1,4 @@
-import { App, CfnOutput, RemovalPolicy } from "@aws-cdk/core";
+import { CfnOutput, RemovalPolicy, Construct } from "@aws-cdk/core";
 import BasePipelineStack, {
   BasePipelineStackProps,
 } from "../base_stacks/base_pipeline_stack";
@@ -19,7 +19,7 @@ export interface SpaPipelineStackProps extends BasePipelineStackProps {
 }
 
 export default class SpaPipelineStack extends BasePipelineStack {
-  constructor(scope: App, id: string, props: SpaPipelineStackProps) {
+  constructor(scope: Construct, id: string, props: SpaPipelineStackProps) {
     super(scope, id, {
       description: `Pipeline, Build & Deploy to S3 bucket for ${props.appName}-${props.appEnvironment} SPA Application`,
       ...props,
