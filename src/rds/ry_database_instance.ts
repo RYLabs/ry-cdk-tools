@@ -152,7 +152,7 @@ export default class RyDatabaseInstance extends DatabaseInstance
 
     const instance = DatabaseInstance.fromDatabaseInstanceAttributes(
       scope,
-      `id,
+      id,
       {
         instanceIdentifier,
         instanceEndpointAddress,
