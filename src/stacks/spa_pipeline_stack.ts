@@ -9,6 +9,7 @@ import {
   CodeBuildAction,
   S3DeployAction,
 } from "@aws-cdk/aws-codepipeline-actions";
+import CloudFrontDomainSSL from "../constructs/cloudfront_domain_ssl";
 
 function isProduction(env: string) {
   return env === "prod" || env === "production";
@@ -16,6 +17,9 @@ function isProduction(env: string) {
 
 export interface SpaPipelineStackProps extends BasePipelineStackProps {
   subDomain?: string;
+  domainName: string;
+  cloudFrontWithDomainSSL: boolean;
+
 }
 
 export default class SpaPipelineStack extends BasePipelineStack {
@@ -30,10 +34,12 @@ export default class SpaPipelineStack extends BasePipelineStack {
       subDomain = isProduction(appEnvironment)
         ? appName
         : this.conventions.eqn("dash"),
+      domainName,
+      cloudFrontWithDomainSSL,
     } = props;
 
     const bucketWebsite = new Bucket(this, "siteBucket", {
-      bucketName: subDomain.toLowerCase(),
+      bucketName: `${appName.toLowerCase() + appEnvironment.toLowerCase()}`, // i dont think subDomain should be set to the app name and environment. best to stick with www api prod test stag. Then name the bucket after the app and the environment
       websiteIndexDocument: "index.html",
       websiteErrorDocument: "index.html",
       publicReadAccess: true,
@@ -71,6 +77,19 @@ export default class SpaPipelineStack extends BasePipelineStack {
           bucket: bucketWebsite,
         }),
       ],
+    });
+
+    if (cloudFrontWithDomainSSL == true) {
+      new CloudFrontDomainSSL(this, 'CloudfrontSetup', {
+        subDomain: subDomain,
+        domainName: domainName,
+        bucket: bucketWebsite,
+      });
+    }
+
+    new CfnOutput(this, 'SPA Site', {
+      value: 'https://' + subDomain + "." + domainName,
+      description: `Project URL for ${this.conventions.eqn("dash")}`,
     });
 
     new CfnOutput(this, `${this.conventions.eqn("camel")}URL`, {
