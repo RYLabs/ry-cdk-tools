@@ -85,12 +85,12 @@ export default class SpaPipelineStack extends BasePipelineStack {
         domainName: domainName,
         bucket: bucketWebsite,
       });
-    }
 
-    new CfnOutput(this, 'SPA Site', {
-      value: 'https://' + subDomain + "." + domainName,
-      description: `Project URL for ${this.conventions.eqn("dash")}`,
-    });
+      new CfnOutput(this, 'SPA Site', {
+        value: 'https://' + subDomain + "." + domainName,
+        description: `Project URL for ${this.conventions.eqn("dash")}`,
+      });
+    }
 
     new CfnOutput(this, `${this.conventions.eqn("camel")}URL`, {
       value: bucketWebsite.bucketWebsiteUrl,
