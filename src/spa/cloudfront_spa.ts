@@ -1,36 +1,42 @@
-import { Construct } from "@aws-cdk/core";
+import { Construct, RemovalPolicy } from "@aws-cdk/core";
 import { DnsValidatedCertificate } from '@aws-cdk/aws-certificatemanager';
-import { HostedZone, ARecord, RecordTarget } from '@aws-cdk/aws-route53';
+import { IHostedZone, ARecord, RecordTarget } from '@aws-cdk/aws-route53';
 import { CloudFrontWebDistribution, SSLMethod, SecurityPolicyProtocol } from '@aws-cdk/aws-cloudfront';
 import { Bucket } from "@aws-cdk/aws-s3";
 import { CloudFrontTarget } from '@aws-cdk/aws-route53-targets/lib';
 
-export interface CloudFrontDomainSSLProps {
+export interface CloudFrontSpaProps {
   // prefix for website address www. api. test.
   subDomain: string;
-  domainName: string;  // address for website example.com
-  bucket: Bucket; // This is the Bucket used in the final deploy section of the pipeline It could also be an IBucket
+  hostedZone: IHostedZone;
 }
 
-export default class CloudFrontDomainSSL {
+// Single page application using Cloudfront
+export default class CloudfrontSpa extends Construct {
+  bucket: Bucket;
+  websiteUrl: string;
+
   // Construct needed to be passed for the creation of resources.
-  constructor(scope: Construct, id: string, props: CloudFrontDomainSSLProps){
-    
+  constructor(scope: Construct, id: string, props: CloudFrontSpaProps){
+    super(scope, id);
+
     const {
-      domainName,
+      hostedZone,
       subDomain,
-      bucket,
     } = props
 
-    const fullDomain = subDomain + "." + domainName
-    
-    const hostedZone = HostedZone.fromLookup(scope, 'Zone', {
-      domainName: domainName,
+    this.bucket = new Bucket(this, "siteBucket", {
+      bucketName: `${id.toLowerCase()}-cloudfrontspa`,
+      removalPolicy: RemovalPolicy.DESTROY,
     });
 
+    const fullDomain = subDomain + "." + hostedZone.zoneName
+
     const cert = new DnsValidatedCertificate(scope, "httpsCert", {
-      domainName: `*.${domainName}`,
+      domainName: `*.${hostedZone.zoneName}`,
       hostedZone,
+
+      // Cloudfront always looks for certs in us-east-1
       region: "us-east-1"
     });
 
@@ -44,7 +50,7 @@ export default class CloudFrontDomainSSL {
       originConfigs: [
         {
           s3OriginSource: {
-            s3BucketSource: bucket
+            s3BucketSource: this.bucket
           },
           behaviors : [ {isDefaultBehavior: true}]
         }
@@ -56,5 +62,7 @@ export default class CloudFrontDomainSSL {
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
       zone: hostedZone,
     });
+
+    this.websiteUrl = `https://${subDomain}.${hostedZone.zoneName}`;
   }
 } 
