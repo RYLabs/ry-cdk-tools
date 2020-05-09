@@ -458,6 +458,7 @@ Object {
     },
     "appdevdbMasterPasswordBF210889": Object {
       "Properties": Object {
+        "Description": "password for app-dev database",
         "GenerateSecretString": Object {
           "ExcludeCharacters": "{}[]\\"'\`@/\\\\",
           "GenerateStringKey": "password",

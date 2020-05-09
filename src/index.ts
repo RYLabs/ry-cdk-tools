@@ -1,5 +1,4 @@
-export { default as SPAPipelineStack } from "./stacks/spa_pipeline_stack";
-export * from "./stacks/spa_pipeline_stack";
+export * from "./spa";
 
 export { default as VpcStack } from "./stacks/vpc_stack";
 export * from "./stacks/vpc_stack";
