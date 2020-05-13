@@ -1,43 +1,42 @@
-import { CfnOutput, RemovalPolicy, Construct } from "@aws-cdk/core";
+import { CfnOutput, Construct } from "@aws-cdk/core";
 import BasePipelineStack, {
   BasePipelineStackProps,
 } from "../base_stacks/base_pipeline_stack";
-import { Bucket } from "@aws-cdk/aws-s3";
 import { PipelineProject, BuildSpec } from "@aws-cdk/aws-codebuild";
 import { Artifact } from "@aws-cdk/aws-codepipeline";
 import {
   CodeBuildAction,
   S3DeployAction,
 } from "@aws-cdk/aws-codepipeline-actions";
+import { HostedZone } from "@aws-cdk/aws-route53";
+import CloudfrontSpa from "../spa/cloudfront_spa";
 
-function isProduction(env: string) {
-  return env === "prod" || env === "production";
-}
-
-export interface SpaPipelineStackProps extends BasePipelineStackProps {
+export interface CloudfrontSpaPipelineStackProps
+  extends BasePipelineStackProps {
   subDomain?: string;
+  domainName: string;
 }
 
-export default class SpaPipelineStack extends BasePipelineStack {
-  constructor(scope: Construct, id: string, props: SpaPipelineStackProps) {
+export default class S3SpaPipelineStack extends BasePipelineStack {
+  constructor(
+    scope: Construct,
+    id: string,
+    props: CloudfrontSpaPipelineStackProps
+  ) {
     super(scope, id, {
-      description: `Pipeline, Build & Deploy to S3 bucket for ${props.appName}-${props.appEnvironment} SPA Application`,
+      description: `Pipeline, Build & Deploy to Cloudfront for ${props.appName}-${props.appEnvironment} SPA Application`,
       ...props,
     });
 
-    const { appName = id, appEnvironment } = props;
-    const {
-      subDomain = isProduction(appEnvironment)
-        ? appName
-        : this.conventions.eqn("dash"),
-    } = props;
+    const { subDomain = this.conventions.eqn("dash"), domainName } = props;
 
-    const bucketWebsite = new Bucket(this, "siteBucket", {
-      bucketName: subDomain.toLowerCase(),
-      websiteIndexDocument: "index.html",
-      websiteErrorDocument: "index.html",
-      publicReadAccess: true,
-      removalPolicy: RemovalPolicy.DESTROY,
+    const hostedZone = HostedZone.fromLookup(scope, "Zone", {
+      domainName: domainName,
+    });
+
+    const spa = new CloudfrontSpa(this, "spa", {
+      subDomain,
+      hostedZone,
     });
 
     const outputWebsite = new Artifact();
@@ -68,14 +67,14 @@ export default class SpaPipelineStack extends BasePipelineStack {
         new S3DeployAction({
           actionName: "Website",
           input: outputWebsite,
-          bucket: bucketWebsite,
+          bucket: spa.bucket,
         }),
       ],
     });
 
-    new CfnOutput(this, `${this.conventions.eqn("camel")}URL`, {
-      value: bucketWebsite.bucketWebsiteUrl,
-      description: "URL for Website",
+    new CfnOutput(this, "SPA Site", {
+      value: spa.websiteUrl,
+      description: `Project URL for ${this.conventions.eqn("dash")}`,
     });
   }
 }

@@ -1,0 +1,52 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`creates a single page application 1`] = `
+Object {
+  "Resources": Object {
+    "spasiteBucket0C2DE9A5": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "BucketName": "test-site",
+        "WebsiteConfiguration": Object {
+          "ErrorDocument": "index.html",
+          "IndexDocument": "index.html",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "spasiteBucketPolicy0093B613": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "spasiteBucket0C2DE9A5",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:GetObject",
+              "Effect": "Allow",
+              "Principal": "*",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    Object {
+                      "Fn::GetAtt": Array [
+                        "spasiteBucket0C2DE9A5",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+  },
+}
+`;
