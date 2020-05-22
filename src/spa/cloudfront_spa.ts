@@ -1,68 +1,94 @@
-import { Construct, RemovalPolicy } from "@aws-cdk/core";
-import { DnsValidatedCertificate } from '@aws-cdk/aws-certificatemanager';
-import { IHostedZone, ARecord, RecordTarget } from '@aws-cdk/aws-route53';
-import { CloudFrontWebDistribution, SSLMethod, SecurityPolicyProtocol } from '@aws-cdk/aws-cloudfront';
-import { Bucket } from "@aws-cdk/aws-s3";
-import { CloudFrontTarget } from '@aws-cdk/aws-route53-targets/lib';
+import { Construct, CfnOutput } from "@aws-cdk/core";
+import { IBucket } from "@aws-cdk/aws-s3";
+import {
+  IHostedZone,
+  ARecord,
+  RecordTarget,
+  HostedZone,
+} from "@aws-cdk/aws-route53";
+import { CloudFrontTarget } from "@aws-cdk/aws-route53-targets/lib";
+import { DnsValidatedCertificate } from "@aws-cdk/aws-certificatemanager";
+import S3Spa from "./s3_spa";
+import { CloudFrontWebDistribution } from "@aws-cdk/aws-cloudfront";
 
-export interface CloudFrontSpaProps {
-  // prefix for website address www. api. test.
-  subDomain: string;
-  hostedZone: IHostedZone;
+export interface CloudfrontSpaProps {
+  subDomain?: string;
+  /**
+   * certificateArn: "arn:aws:acm:region:123456789012:certificate/12345678-1234-1234-1234-123456789012"
+   * This value can be entered manually from your own certficate stored with ACM
+   * or you can create Route53AcmSslStack.
+   */
+  certificateArn?: string;
+  /**
+   *  sourceBucket: IBucket
+   *  The S3 bucket where your live project is located.
+   *  If no bucket is provided then a new bucket is created.
+   */
+  sourceBucket?: IBucket;
+  domainName: string;
 }
 
-// Single page application using Cloudfront
-export default class CloudfrontSpa extends Construct {
-  bucket: Bucket;
-  websiteUrl: string;
+function createCert(scope: any, domainName: string, zone: IHostedZone) {
+  const cert = new DnsValidatedCertificate(scope, "projectCertificate", {
+    domainName: domainName,
+    hostedZone: zone,
+  });
+  return cert.certificateArn;
+}
 
-  // Construct needed to be passed for the creation of resources.
-  constructor(scope: Construct, id: string, props: CloudFrontSpaProps){
+function createBucket(scope: any) {
+  const bucket = new S3Spa(scope, "projectBucket", {
+    bucketName: scope.conventions.eqn("dash").toLowerCase(),
+  });
+  return bucket;
+}
+
+export default class CloudfrontSpa extends Construct {
+  constructor(scope: Construct, id: string, props: CloudfrontSpaProps) {
     super(scope, id);
 
     const {
-      hostedZone,
-      subDomain,
-    } = props
+      subDomain = "www",
+      certificateArn,
+      sourceBucket,
+      domainName,
+    } = props;
 
-    this.bucket = new Bucket(this, "siteBucket", {
-      bucketName: `${id.toLowerCase()}-cloudfrontspa`,
-      removalPolicy: RemovalPolicy.DESTROY,
+    const hostedZone = HostedZone.fromLookup(this, "projectHostedZone", {
+      domainName: domainName,
     });
 
-    const fullDomain = subDomain + "." + hostedZone.zoneName
+    const fullDomain = subDomain + "." + hostedZone.zoneName;
 
-    const cert = new DnsValidatedCertificate(scope, "httpsCert", {
-      domainName: `*.${hostedZone.zoneName}`,
-      hostedZone,
-
-      // Cloudfront always looks for certs in us-east-1
-      region: "us-east-1"
-    });
-
-    const distribution = new CloudFrontWebDistribution(scope, 'MyDistribution', {
-      aliasConfiguration: {
-        acmCertRef: cert.certificateArn,
-        names: [fullDomain],
-        sslMethod: SSLMethod.SNI,
-        securityPolicy: SecurityPolicyProtocol.TLS_V1_2_2018
-      },
-      originConfigs: [
-        {
-          s3OriginSource: {
-            s3BucketSource: this.bucket
+    const distribution = new CloudFrontWebDistribution(
+      this,
+      `projectDistribution`,
+      {
+        aliasConfiguration: {
+          acmCertRef:
+            certificateArn || createCert(this, domainName, hostedZone),
+          names: [fullDomain, domainName],
+        },
+        originConfigs: [
+          {
+            s3OriginSource: {
+              s3BucketSource: sourceBucket || createBucket(this).bucket,
+            },
+            behaviors: [{ isDefaultBehavior: true }],
           },
-          behaviors : [ {isDefaultBehavior: true}]
-        }
-      ]
-    });
+        ],
+      }
+    );
 
-    new ARecord(scope, 'SiteAliasRecord', {
+    new ARecord(this, "SiteAliasRecord", {
       recordName: fullDomain,
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
       zone: hostedZone,
     });
 
-    this.websiteUrl = `https://${subDomain}.${hostedZone.zoneName}`;
+    new CfnOutput(this, "Project HTTPS URL", {
+      value: "https://" + fullDomain,
+      description: "Project URL using CloudFront Route53 for SSL",
+    });
   }
-} 
+}
