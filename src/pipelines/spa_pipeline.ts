@@ -10,7 +10,7 @@ import { IBucket } from "@aws-cdk/aws-s3";
 export interface SpaPipelineProps {
   projectName: string;
   pipeline: Pipeline;
-  githubRepoArtifact: Artifact;
+  sourceArtifact: Artifact;
   websiteBucket: IBucket;
 }
 
@@ -18,7 +18,7 @@ export default class SpaPipeline extends Construct {
   constructor(scope: Construct, id: string, props: SpaPipelineProps) {
     super(scope, id);
 
-    const { projectName, pipeline, githubRepoArtifact, websiteBucket } = props;
+    const { projectName, pipeline, sourceArtifact, websiteBucket } = props;
 
     const outputWebsite = new Artifact();
 
@@ -34,7 +34,7 @@ export default class SpaPipeline extends Construct {
         new CodeBuildAction({
           actionName: "Website",
           project,
-          input: githubRepoArtifact,
+          input: sourceArtifact,
           outputs: [outputWebsite],
         }),
       ],

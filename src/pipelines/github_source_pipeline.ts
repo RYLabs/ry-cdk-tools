@@ -9,32 +9,10 @@ import {
 } from "@aws-cdk/aws-codepipeline-actions";
 import _ = require("lodash");
 
-// /**
-//  * Create a Keys type that declares its type
-//  */
-// type Keys<T> = keyof T;
-// function Keys<T>(o: T) {
-//   if (!o) {
-//     return [];
-//   }
-//   return Object.keys(o) as Keys<T>[];
-// }
-// /**
-//  * Refractored code to make OneOf less smelly
-//  */
-// type EachOfTmp<T> = {
-//   [K in Keys<T>]: {
-//     _: { [X in K]: T[K] };
-//   };
-// };
-// /**
-//  * When parameters are confitional but one must be used
-//  * This type should be used.
-//  * const thing1: OneOf<{ a: number; b: number }> = { a: 2 } // valid
-//  * const thing2: OneOf<{ a: number; b: number }> = { b: 2 } // valid
-//  * const thing3: OneOf<{ a: number; b: number }> = {} // invalid
-//  */
-// type OneOf<T> = EachOfTmp<T>[Keys<T>]["_"] & Partial<T>;
+/**
+ * Type was created for githubOAuthToken
+ * 
+ */
 type KeySource = string | SecretValue;
 
 export interface GithubSourcePipelineProps {
@@ -123,7 +101,7 @@ export default class GithubSourcePipeline extends Construct {
       return SecretValue.secretsManager(source, { jsonField: source });
     }
   };
-  
+
   constructor(scope: Construct, id: string, props: GithubSourcePipelineProps) {
     super(scope, id);
 
@@ -132,7 +110,6 @@ export default class GithubSourcePipeline extends Construct {
       ownerName,
       branchName = "master",
       githubOAuthToken,
-      // githubAuth,
       bucketName,
     } = props;
 
