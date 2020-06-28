@@ -21,13 +21,13 @@ export interface SpaPipelineStackProps extends BasePipelineStackProps {
 export default class SpaPipelineStack extends BasePipelineStack {
   constructor(scope: Construct, id: string, props: SpaPipelineStackProps) {
     super(scope, id, {
-      description: `Pipeline, Build & Deploy to S3 bucket for ${props.appEnv.appName}-${props.appEnv.appEnvironment} SPA Application`,
+      description: `Pipeline, Build & Deploy to S3 bucket for ${props.appInfo.name}-${props.appInfo.environment} SPA Application`,
       ...props,
     });
 
-    const { appEnv } = props;
+    const { appInfo } = props;
     const {
-      subDomain = isProduction(appEnv.appEnvironment)
+      subDomain = isProduction(appInfo.environment)
         ? id
         : this.conventions.eqn("dash"),
     } = props;

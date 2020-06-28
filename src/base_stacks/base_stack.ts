@@ -1,13 +1,9 @@
 import { Stack, StackProps, Construct } from "@aws-cdk/core";
-import Conventions from "../constructs/conventions";
+import Conventions from "../utils/conventions";
+import { AppInfo } from "../utils/app_info";
 
 export interface BaseStackProps extends StackProps {
-  appEnv: {
-    appName: string;
-    appEnvironment: string;
-    orgName: string;
-    author: string;
-  }
+  appInfo: AppInfo
 }
 
 export default class BaseStack extends Stack {
@@ -16,9 +12,9 @@ export default class BaseStack extends Stack {
   constructor(scope: Construct, id: string, props: BaseStackProps) {
     super(scope, id, props);
     
-    const { appEnv } = props;
+    const { appInfo } = props;
     
-    const conventions = new Conventions(appEnv);
+    const conventions = new Conventions(appInfo);
     conventions.tag(this);
     this.conventions = conventions;
   }

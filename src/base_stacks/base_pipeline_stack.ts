@@ -63,7 +63,7 @@ export default class BasePipelineStack extends BaseStack {
     super(scope, id, props);
 
     const {
-      appEnv,
+      appInfo,
       repoName,
       ownerName,
       branchName = "master",
@@ -84,7 +84,7 @@ export default class BasePipelineStack extends BaseStack {
           actions: [
             new GitHubSourceAction({
               actionName: "githubRepo_Source",
-              repo: repoName || appEnv.appName,
+              repo: repoName || appInfo.name,
               owner: ownerName,
               branch: branchName,
               oauthToken:

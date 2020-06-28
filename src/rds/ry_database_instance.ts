@@ -12,7 +12,7 @@ import {
   InstanceSize,
 } from "@aws-cdk/aws-ec2";
 import { Secret } from "@aws-cdk/aws-secretsmanager";
-import Conventions from "../constructs/conventions";
+import Conventions from "../utils/conventions";
 
 export const instanceDefaults = {
   backupRetention: Duration.days(7),

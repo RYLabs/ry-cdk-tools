@@ -11,7 +11,7 @@ export default class VpcStack extends BaseStack {
 
   constructor(scope: Construct, id: string, props: VpcStackProps) {
     super(scope, id, {
-      description: `VPC for the ${id} ${props.appEnv.appEnvironment} environment`,
+      description: `VPC for the ${id} ${props.appInfo.environment} environment`,
       ...props,
     });
 

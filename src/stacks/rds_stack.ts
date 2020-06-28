@@ -20,7 +20,7 @@ export default class RdsStack extends BaseStack {
 
   constructor(scope: Construct, id: string, props: RdsStackProps) {
     super(scope, id, {
-      description: `RDS for the ${id} ${props.appEnv.appEnvironment} environment`,
+      description: `RDS for the ${id} ${props.appInfo.environment} environment`,
       ...props,
     });
 
