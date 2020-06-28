@@ -34,7 +34,7 @@ export default class RdsStack extends BaseStack {
     if ("stack" in vpcProp) {
       vpc = vpcProp;
     } else {
-      vpc = Vpc.fromLookup(scope, "vpc", vpcProp);
+      vpc = Vpc.fromLookup(this, "vpc", vpcProp);
     }
 
     this.securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
