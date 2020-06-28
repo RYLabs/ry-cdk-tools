@@ -1,18 +1,22 @@
 import { Construct } from "@aws-cdk/core";
-import { SecurityGroup } from "@aws-cdk/aws-ec2";
+import { SecurityGroup, IVpc, Vpc, VpcLookupOptions } from "@aws-cdk/aws-ec2";
 import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
 import PostgresInstance from "../rds/postgres_instance";
 import RyDatabaseInstance, {
   BaseRyDatabaseInstanceProps,
 } from "../rds/ry_database_instance";
 
-type BaseRyDatabaseInstancePropsOmitConventions = Omit<
-  BaseRyDatabaseInstanceProps,
-  "conventions"
->;
 export interface RdsStackProps
   extends BaseStackProps,
-    BaseRyDatabaseInstancePropsOmitConventions {}
+    Pick<
+      BaseRyDatabaseInstanceProps,
+      Exclude<keyof BaseRyDatabaseInstanceProps, "conventions" | "vpc">
+    > {
+  /**
+   * Provide the Vpc for the RDS using a direct reference or via lookup options
+   */
+  readonly vpc: IVpc | VpcLookupOptions;
+}
 
 export default class RdsStack extends BaseStack {
   dbInstance: RyDatabaseInstance;
@@ -24,13 +28,21 @@ export default class RdsStack extends BaseStack {
       ...props,
     });
 
-    const { vpc, securityGroups = [] } = props;
+    const { vpc: vpcProp, securityGroups = [] } = props;
+
+    let vpc: IVpc;
+    if ("stack" in vpcProp) {
+      vpc = vpcProp;
+    } else {
+      vpc = Vpc.fromLookup(scope, "vpc", vpcProp);
+    }
 
     this.securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
     securityGroups.push(this.securityGroup);
 
     this.dbInstance = new PostgresInstance(this, "instance", {
       ...props,
+      vpc,
       conventions: this.conventions,
       securityGroups,
     });
