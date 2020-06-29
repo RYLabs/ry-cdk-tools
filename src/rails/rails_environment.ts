@@ -46,7 +46,10 @@ export interface DatabaseAccess {
 }
 
 export interface RailsEnvironmentProps
-  extends Omit<ElasticbeanstalkEnvironmentProps, "solutionStackName"> {
+  extends Omit<
+    ElasticbeanstalkEnvironmentProps,
+    "solutionStackName" | "securityGroup"
+  > {
   /**
    * Database access information for generating the database.yml
    */
@@ -96,6 +99,7 @@ export class RailsEnvironment extends Construct {
       {
         ...props,
         solutionStackName: solutionStackName || DEFAULT_SOLUTION_STACK_NAME,
+        securityGroup: this.securityGroup,
         ...railsEnvironmentVariables(
           databaseAccess,
           railsEnvironment,

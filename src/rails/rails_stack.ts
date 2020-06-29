@@ -3,7 +3,6 @@ import {
   CfnApplicationVersion,
   CfnApplication,
 } from "@aws-cdk/aws-elasticbeanstalk";
-import { IVpc } from "@aws-cdk/aws-ec2";
 import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
 import { RailsEnvironment, RailsEnvironmentProps } from "./rails_environment";
 import { Conventions } from "../core";
