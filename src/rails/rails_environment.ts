@@ -7,7 +7,7 @@ import { ISecurityGroup, SecurityGroup, Port } from "@aws-cdk/aws-ec2";
 import { IDatabaseInstance } from "@aws-cdk/aws-rds";
 
 const DEFAULT_SOLUTION_STACK_NAME =
-  "64bit Amazon Linux 2018.03 v2.11.4 running Ruby 2.6 (Puma)";
+  "64bit Amazon Linux 2018.03 v2.11.7 running Ruby 2.6 (Puma)";
 
 function railsEnvironmentVariables(
   db: DatabaseAccess,
