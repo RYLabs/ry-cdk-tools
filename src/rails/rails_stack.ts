@@ -80,7 +80,7 @@ export class RailsStack extends BaseStack {
         // bat, so we're going to use a "starter" bundle which is just a very
         // basic Rails app.
         sourceBundle: {
-          s3Bucket: "rails-cdk",
+          s3Bucket: "rails-cdk-us-east-1",
           s3Key: "starterApp.zip",
         },
       });
