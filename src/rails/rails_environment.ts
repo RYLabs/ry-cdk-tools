@@ -82,7 +82,6 @@ export class RailsEnvironment extends Construct {
       databaseAccess,
       railsEnvironment = "production",
       railsMasterKey,
-      applicationVersion,
     } = props;
 
     const securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
@@ -92,20 +91,17 @@ export class RailsEnvironment extends Construct {
       `${id} app`
     );
 
-    this.elasticbeanstalkEnvironment = new ElasticbeanstalkEnvironment(
-      scope,
-      "ebEnv",
-      {
-        ...props,
-        solutionStackName: solutionStackName || DEFAULT_SOLUTION_STACK_NAME,
-        securityGroup,
-        ...railsEnvironmentVariables(
-          databaseAccess,
-          railsEnvironment,
-          railsMasterKey
-        ),
-      }
-    );
-    this.elasticbeanstalkEnvironment.addDependsOn(applicationVersion);
+    const ebEnv = new ElasticbeanstalkEnvironment(this, "ebEnv", {
+      ...props,
+      solutionStackName: solutionStackName || DEFAULT_SOLUTION_STACK_NAME,
+      securityGroup,
+      ...railsEnvironmentVariables(
+        databaseAccess,
+        railsEnvironment,
+        railsMasterKey
+      ),
+    });
+
+    this.elasticbeanstalkEnvironment = ebEnv;
   }
 }

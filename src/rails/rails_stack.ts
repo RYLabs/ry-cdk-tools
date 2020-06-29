@@ -63,7 +63,7 @@ export class RailsStack extends BaseStack {
     } = props;
 
     // Setup the EB app.
-    this.application =
+    const application =
       props.application ||
       new CfnApplication(this, "rails", {
         applicationName,
@@ -74,7 +74,7 @@ export class RailsStack extends BaseStack {
     const applicationVersion =
       props.applicationVersion ||
       new CfnApplicationVersion(this, "railsAppVer", {
-        applicationName: id,
+        applicationName,
 
         // Elasticbeanstalk configuration requires an app bundle right off the
         // bat, so we're going to use a "starter" bundle which is just a very
@@ -84,7 +84,7 @@ export class RailsStack extends BaseStack {
           s3Key: "starterApp.zip",
         },
       });
-    applicationVersion.addDependsOn(this.application);
+    applicationVersion.addDependsOn(application);
 
     // Rails master key
     const railsMasterKey =
@@ -107,5 +107,7 @@ export class RailsStack extends BaseStack {
       ec2InstanceTag: "elasticbeanstalk:environment-name",
       ec2InstanceTagValue: environmentName,
     });
+
+    this.application = application
   }
 }
