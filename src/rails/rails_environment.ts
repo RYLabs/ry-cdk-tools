@@ -72,7 +72,6 @@ export interface RailsEnvironmentProps
 
 export class RailsEnvironment extends Construct {
   elasticbeanstalkEnvironment: ElasticbeanstalkEnvironment;
-  securityGroup: SecurityGroup;
 
   constructor(scope: Construct, id: string, props: RailsEnvironmentProps) {
     super(scope, id);
@@ -86,8 +85,8 @@ export class RailsEnvironment extends Construct {
       applicationVersion,
     } = props;
 
-    this.securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
-    this.securityGroup.connections.allowTo(
+    const securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
+    securityGroup.connections.allowTo(
       databaseAccess.securityGroup,
       Port.tcp(databaseAccess.instance.instanceEndpoint.port),
       `${id} app`
@@ -99,7 +98,7 @@ export class RailsEnvironment extends Construct {
       {
         ...props,
         solutionStackName: solutionStackName || DEFAULT_SOLUTION_STACK_NAME,
-        securityGroup: this.securityGroup,
+        securityGroup,
         ...railsEnvironmentVariables(
           databaseAccess,
           railsEnvironment,
