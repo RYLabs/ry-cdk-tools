@@ -31,7 +31,7 @@ export default class RdsStack extends BaseStack {
 
     const { vpc: vpcProp, securityGroups = [] } = props;
 
-    const vpc = resolveVpc(this, vpcProp)
+    const vpc = resolveVpc(this, vpcProp);
 
     this.securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
     securityGroups.push(this.securityGroup);
