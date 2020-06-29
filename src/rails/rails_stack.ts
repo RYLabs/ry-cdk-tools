@@ -108,6 +108,6 @@ export class RailsStack extends BaseStack {
       ec2InstanceTagValue: environmentName,
     });
 
-    this.application = application
+    this.application = application;
   }
 }
