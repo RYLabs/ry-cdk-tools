@@ -41,7 +41,7 @@ export interface RailsStackProps
   application?: CfnApplication;
 }
 
-export default class RailsStack extends BaseStack {
+export class RailsStack extends BaseStack {
   readonly application: CfnApplication;
 
   constructor(scope: App, id: string, props: RailsStackProps) {
