@@ -9,6 +9,11 @@ import { Conventions } from "../core";
 import { SessionAccess } from "../constructs/session_access";
 import { IVpcLookup, resolveVpc } from "../utils/lookups";
 
+const starterSourceBundleBucketMapping: { [key: string]: string } = {
+  "us-east-1": "rails-cdk-us-east-1",
+  "us-east-2": "rails-cdk",
+};
+
 function defaultRailsMasterKey(conventions: Conventions) {
   const secretKey = `${conventions.eqn("camel")}SecretKeyBase`;
   return SecretValue.secretsManager(secretKey, {
@@ -80,7 +85,8 @@ export class RailsStack extends BaseStack {
         // bat, so we're going to use a "starter" bundle which is just a very
         // basic Rails app.
         sourceBundle: {
-          s3Bucket: "rails-cdk-us-east-1",
+          s3Bucket:
+            starterSourceBundleBucketMapping[this.region] || "rails-cdk",
           s3Key: "starterApp.zip",
         },
       });
