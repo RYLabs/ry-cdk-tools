@@ -1,6 +1,6 @@
 {
   "name": "@rylabs/ry-cdk-tools",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "Tools or working with the AWS CDK",
   "repository": "git@github.com:RYLabs/ry-cdk-tools.git",
   "author": "Calvin Yu <calvin@rylabs.io>",
