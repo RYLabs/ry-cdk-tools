@@ -5,6 +5,7 @@ import PostgresInstance from "../rds/postgres_instance";
 import RyDatabaseInstance, {
   BaseRyDatabaseInstanceProps,
 } from "../rds/ry_database_instance";
+import { IVpcLookup, resolveVpc } from "../utils/lookups";
 
 export interface RdsStackProps
   extends BaseStackProps,
@@ -15,7 +16,7 @@ export interface RdsStackProps
   /**
    * Provide the Vpc for the RDS using a direct reference or via lookup options
    */
-  readonly vpc: IVpc | VpcLookupOptions;
+  readonly vpc: IVpcLookup;
 }
 
 export default class RdsStack extends BaseStack {
@@ -30,12 +31,7 @@ export default class RdsStack extends BaseStack {
 
     const { vpc: vpcProp, securityGroups = [] } = props;
 
-    let vpc: IVpc;
-    if ("stack" in vpcProp) {
-      vpc = vpcProp;
-    } else {
-      vpc = Vpc.fromLookup(this, "vpc", vpcProp);
-    }
+    const vpc = resolveVpc(this, vpcProp)
 
     this.securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
     securityGroups.push(this.securityGroup);

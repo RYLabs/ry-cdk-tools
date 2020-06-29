@@ -8,6 +8,7 @@ import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
 import { RailsEnvironment, RailsEnvironmentProps } from "./rails_environment";
 import { Conventions } from "../core";
 import { SessionAccess } from "../constructs/session_access";
+import { IVpcLookup, resolveVpc } from "../utils/lookups";
 
 function defaultRailsMasterKey(conventions: Conventions) {
   const secretKey = `${conventions.eqn("camel")}SecretKeyBase`;
@@ -20,25 +21,28 @@ export interface RailsStackProps
   extends BaseStackProps,
     Omit<
       RailsEnvironmentProps,
-      "applicationName" | "environmentName" | "applicationVersion"
+      "applicationName" | "environmentName" | "applicationVersion" | "vpc"
     > {
   /**
    * The Elasticbeanstalk application name.
    *
    * @default appInfo.name
    */
-  applicationName?: string;
+  readonly applicationName?: string;
 
   /**
    * The Elasticbeanstalk environment name.
    */
-  environmentName?: string;
+  readonly environmentName?: string;
 
-  vpc: IVpc;
+  /**
+   * Provide the Vpc for the RDS using a direct reference or via lookup options
+   */
+  readonly vpc: IVpcLookup;
 
-  applicationVersion?: CfnApplicationVersion;
+  readonly applicationVersion?: CfnApplicationVersion;
 
-  application?: CfnApplication;
+  readonly application?: CfnApplication;
 }
 
 export class RailsStack extends BaseStack {
@@ -53,10 +57,10 @@ export class RailsStack extends BaseStack {
     const {
       applicationName = props.appInfo.name,
       environmentName = this.conventions.eqn(),
-
       ec2InstanceTypes = ["t3.micro"],
       rootVolumeType = "gp2",
       rootVolumeSize = 50,
+      vpc,
     } = props;
 
     // Setup the EB app.
@@ -89,6 +93,7 @@ export class RailsStack extends BaseStack {
 
     const railsEnvironment = new RailsEnvironment(this, "railsEnv", {
       ...props,
+      vpc: resolveVpc(this, vpc),
       applicationName,
       environmentName,
       applicationVersion,
