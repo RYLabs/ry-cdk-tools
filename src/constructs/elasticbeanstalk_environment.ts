@@ -82,6 +82,7 @@ export interface ElasticbeanstalkEnvironmentProps {
   solutionStackName: string;
   rootVolumeType?: string;
   rootVolumeSize?: number;
+  iamInstanceProfile?: string;
 }
 
 export class ElasticbeanstalkEnvironment extends CfnEnvironment {
@@ -101,6 +102,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
       solutionStackName,
       rootVolumeType,
       rootVolumeSize,
+      iamInstanceProfile = "aws-elasticbeanstalk-ec2-role",
     } = props;
 
     // TODO: Fix tags not propagating to resources created by EB
@@ -124,7 +126,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
         {
           namespace: "aws:autoscaling:launchconfiguration",
           optionName: "IamInstanceProfile",
-          value: "aws-elasticbeanstalk-ec2-role",
+          value: iamInstanceProfile,
         },
         {
           namespace: "aws:elasticbeanstalk:healthreporting:system",

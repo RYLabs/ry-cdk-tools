@@ -5,6 +5,7 @@ import {
 } from "../constructs/elasticbeanstalk_environment";
 import { ISecurityGroup, SecurityGroup, Port } from "@aws-cdk/aws-ec2";
 import { IDatabaseInstance } from "@aws-cdk/aws-rds";
+import { Role, ServicePrincipal, ManagedPolicy } from "@aws-cdk/aws-iam"
 
 const DEFAULT_SOLUTION_STACK_NAME =
   "64bit Amazon Linux 2018.03 v2.11.7 running Ruby 2.6 (Puma)";
@@ -91,10 +92,20 @@ export class RailsEnvironment extends Construct {
       `${id} app`
     );
 
+    const role = new Role(scope, "role", {
+      assumedBy: new ServicePrincipal("ec2.amazonaws.com"),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName("AWSElasticBeanstalkWebTier"),
+        ManagedPolicy.fromAwsManagedPolicyName("AWSElasticBeanstalkWorkerTier"),
+        ManagedPolicy.fromAwsManagedPolicyName("AWSElasticBeanstalkMulticontainerDocker"),
+      ]
+    })
+
     const ebEnv = new ElasticbeanstalkEnvironment(this, "ebEnv", {
       ...props,
       solutionStackName: solutionStackName || DEFAULT_SOLUTION_STACK_NAME,
       securityGroup,
+      iamInstanceProfile: role.roleName,
       ...railsEnvironmentVariables(
         databaseAccess,
         railsEnvironment,
