@@ -4,7 +4,7 @@ import {
 } from "@aws-cdk/aws-elasticbeanstalk";
 import { Construct } from "@aws-cdk/core";
 import { IVpc, ISecurityGroup } from "@aws-cdk/aws-ec2";
-import { Role, IRole, CfnRole } from "@aws-cdk/aws-iam";
+import { CfnInstanceProfile } from "@aws-cdk/aws-iam";
 
 function optionalSetting(
   setting?: CfnEnvironment.OptionSettingProperty
@@ -72,8 +72,10 @@ function ec2InstanceTypesSetting(
   );
 }
 
-function isRole(role: Role | IRole | string): role is Role {
-  return (role as Role).node !== undefined;
+function isInstanceProfile(
+  profile: CfnInstanceProfile | string
+): profile is CfnInstanceProfile {
+  return (profile as CfnInstanceProfile).node !== undefined;
 }
 
 export interface ElasticbeanstalkEnvironmentProps {
@@ -87,7 +89,7 @@ export interface ElasticbeanstalkEnvironmentProps {
   solutionStackName: string;
   rootVolumeType?: string;
   rootVolumeSize?: number;
-  iamInstanceProfile?: string | IRole;
+  iamInstanceProfile?: string | CfnInstanceProfile;
 }
 
 export class ElasticbeanstalkEnvironment extends CfnEnvironment {
@@ -114,7 +116,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
     if (typeof iamInstanceProfile === "string") {
       _iamInstanceProfile = iamInstanceProfile;
     } else {
-      _iamInstanceProfile = iamInstanceProfile.roleName;
+      _iamInstanceProfile = iamInstanceProfile.instanceProfileName;
     }
 
     // TODO: Fix tags not propagating to resources created by EB
@@ -175,9 +177,8 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
       solutionStackName,
     });
     this.addDependsOn(applicationVersion);
-    if (isRole(iamInstanceProfile)) {
-      this.addDependsOn(iamInstanceProfile.node.defaultChild as CfnRole);
-    }
+    if (isInstanceProfile(iamInstanceProfile))
+      this.addDependsOn(iamInstanceProfile);
     this.environmentName = environmentName;
   }
 }
