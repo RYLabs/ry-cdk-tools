@@ -107,7 +107,7 @@ export class RailsEnvironment extends Construct {
       ...props,
       solutionStackName: solutionStackName || DEFAULT_SOLUTION_STACK_NAME,
       securityGroup,
-      iamInstanceProfile: role.roleName,
+      iamInstanceProfile: role,
       ...railsEnvironmentVariables(
         databaseAccess,
         railsEnvironment,

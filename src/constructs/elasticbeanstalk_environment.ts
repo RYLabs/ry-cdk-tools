@@ -4,6 +4,7 @@ import {
 } from "@aws-cdk/aws-elasticbeanstalk";
 import { Construct } from "@aws-cdk/core";
 import { IVpc, ISecurityGroup } from "@aws-cdk/aws-ec2";
+import { Role, IRole, CfnRole } from "@aws-cdk/aws-iam";
 
 function optionalSetting(
   setting?: CfnEnvironment.OptionSettingProperty
@@ -71,6 +72,10 @@ function ec2InstanceTypesSetting(
   );
 }
 
+function isRole(role: Role | IRole | string): role is Role {
+  return (role as Role).node !== undefined;
+}
+
 export interface ElasticbeanstalkEnvironmentProps {
   applicationName: string;
   environmentName: string;
@@ -82,7 +87,7 @@ export interface ElasticbeanstalkEnvironmentProps {
   solutionStackName: string;
   rootVolumeType?: string;
   rootVolumeSize?: number;
-  iamInstanceProfile?: string;
+  iamInstanceProfile?: string | IRole;
 }
 
 export class ElasticbeanstalkEnvironment extends CfnEnvironment {
@@ -105,6 +110,13 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
       iamInstanceProfile = "aws-elasticbeanstalk-ec2-role",
     } = props;
 
+    let _iamInstanceProfile;
+    if (typeof iamInstanceProfile === "string") {
+      _iamInstanceProfile = iamInstanceProfile;
+    } else {
+      _iamInstanceProfile = iamInstanceProfile.roleName;
+    }
+
     // TODO: Fix tags not propagating to resources created by EB
     super(scope, id, {
       applicationName,
@@ -126,7 +138,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
         {
           namespace: "aws:autoscaling:launchconfiguration",
           optionName: "IamInstanceProfile",
-          value: iamInstanceProfile,
+          value: _iamInstanceProfile,
         },
         {
           namespace: "aws:elasticbeanstalk:healthreporting:system",
@@ -163,6 +175,9 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
       solutionStackName,
     });
     this.addDependsOn(applicationVersion);
+    if (isRole(iamInstanceProfile)) {
+      this.addDependsOn(iamInstanceProfile.node.defaultChild as CfnRole);
+    }
     this.environmentName = environmentName;
   }
 }
