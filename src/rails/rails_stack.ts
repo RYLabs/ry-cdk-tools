@@ -2,6 +2,7 @@ import { App, SecretValue } from "@aws-cdk/core";
 import {
   CfnApplicationVersion,
   CfnApplication,
+  CfnEnvironment,
 } from "@aws-cdk/aws-elasticbeanstalk";
 import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
 import { RailsEnvironment, RailsEnvironmentProps } from "./rails_environment";
@@ -50,7 +51,15 @@ export interface RailsStackProps
 }
 
 export class RailsStack extends BaseStack {
-  readonly application: CfnApplication;
+  /**
+   * The Elastic Beanstalk application
+   */
+  readonly ebApplication: CfnApplication;
+
+  /**
+   * The Elastic Beanstalk environment
+   */
+  readonly ebEnvironment: CfnEnvironment;
 
   constructor(scope: App, id: string, props: RailsStackProps) {
     super(scope, id, {
@@ -114,6 +123,7 @@ export class RailsStack extends BaseStack {
       ec2InstanceTagValue: environmentName,
     });
 
-    this.application = application;
+    this.ebApplication = application;
+    this.ebEnvironment = railsEnvironment.ebEnvironment;
   }
 }

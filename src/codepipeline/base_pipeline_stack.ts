@@ -1,5 +1,5 @@
 import { SecretValue, RemovalPolicy, Construct } from "@aws-cdk/core";
-import BaseStack, { BaseStackProps } from "./base_stack";
+import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
 import { Pipeline, Artifact } from "@aws-cdk/aws-codepipeline";
 import {
   GitHubSourceAction,

@@ -93,6 +93,8 @@ export interface ElasticbeanstalkEnvironmentProps {
 }
 
 export class ElasticbeanstalkEnvironment extends CfnEnvironment {
+  readonly environment: CfnEnvironment
+
   constructor(
     scope: Construct,
     id: string,

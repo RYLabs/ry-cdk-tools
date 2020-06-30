@@ -72,7 +72,7 @@ export interface RailsEnvironmentProps
 }
 
 export class RailsEnvironment extends Construct {
-  elasticbeanstalkEnvironment: ElasticbeanstalkEnvironment;
+  ebEnvironment: ElasticbeanstalkEnvironment;
 
   constructor(scope: Construct, id: string, props: RailsEnvironmentProps) {
     super(scope, id);
@@ -126,6 +126,6 @@ export class RailsEnvironment extends Construct {
       ),
     });
 
-    this.elasticbeanstalkEnvironment = ebEnv;
+    this.ebEnvironment = ebEnv;
   }
 }

@@ -1,7 +1,7 @@
 import { CfnOutput, RemovalPolicy, Construct } from "@aws-cdk/core";
 import BasePipelineStack, {
   BasePipelineStackProps,
-} from "../base_stacks/base_pipeline_stack";
+} from "../codepipeline/base_pipeline_stack";
 import { Bucket } from "@aws-cdk/aws-s3";
 import { PipelineProject, BuildSpec } from "@aws-cdk/aws-codebuild";
 import { Artifact } from "@aws-cdk/aws-codepipeline";
