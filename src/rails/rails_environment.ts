@@ -5,7 +5,13 @@ import {
 } from "../constructs/elasticbeanstalk_environment";
 import { ISecurityGroup, SecurityGroup, Port } from "@aws-cdk/aws-ec2";
 import { IDatabaseInstance } from "@aws-cdk/aws-rds";
-import { Role, CfnRole, ServicePrincipal, ManagedPolicy, CfnInstanceProfile } from "@aws-cdk/aws-iam";
+import {
+  Role,
+  CfnRole,
+  ServicePrincipal,
+  ManagedPolicy,
+  CfnInstanceProfile,
+} from "@aws-cdk/aws-iam";
 
 const DEFAULT_SOLUTION_STACK_NAME =
   "64bit Amazon Linux 2018.03 v2.11.7 running Ruby 2.6 (Puma)";
@@ -103,15 +109,13 @@ export class RailsEnvironment extends Construct {
           "AWSElasticBeanstalkMulticontainerDocker"
         ),
       ],
-      roleName: `${applicationName}-${environmentName}-ec2-role`
+      roleName: `${applicationName}-${environmentName}-ec2-role`,
     });
 
     const iamInstanceProfile = new CfnInstanceProfile(this, "instanceProfile", {
       instanceProfileName: `${applicationName}-${environmentName}-ec2-role`,
-      roles: [
-        role.roleName
-      ]
-    })
+      roles: [role.roleName],
+    });
     iamInstanceProfile.addDependsOn(role.node.defaultChild as CfnRole);
 
     const ebEnv = new ElasticbeanstalkEnvironment(this, "ebEnv", {
