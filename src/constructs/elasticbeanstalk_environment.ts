@@ -73,7 +73,7 @@ function ec2InstanceTypesSetting(
 }
 
 function environmentVariableSettings(
-  envvars?: [EBEnvironmentVariable]
+  envvars?: EBEnvironmentVariable[]
 ): CfnEnvironment.OptionSettingProperty[] {
   return (
     envvars?.map(
