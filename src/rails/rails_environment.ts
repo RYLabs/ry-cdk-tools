@@ -2,6 +2,7 @@ import { Construct, SecretValue } from "@aws-cdk/core";
 import {
   ElasticbeanstalkEnvironment,
   ElasticbeanstalkEnvironmentProps,
+  EBEnvironmentVariable,
 } from "../constructs/elasticbeanstalk_environment";
 import { ISecurityGroup, SecurityGroup, Port } from "@aws-cdk/aws-ec2";
 import { IDatabaseInstance } from "@aws-cdk/aws-rds";
@@ -20,28 +21,23 @@ function railsEnvironmentVariables(
   db: DatabaseAccess,
   railsEnv: string,
   railsMasterKey?: SecretValue
-) {
+): EBEnvironmentVariable[] {
   const envVars = [
-    buildEnvVar("DATABASE_HOST", db.instance.dbInstanceEndpointAddress),
-    buildEnvVar("DATABASE_PORT", db.instance.dbInstanceEndpointPort),
-    buildEnvVar("DATABASE_USER", db.username),
-    buildEnvVar("DATABASE_NAME", db.databaseName),
-    buildEnvVar("DATABASE_PASSWORD", db.password.toString()),
-    buildEnvVar("RAILS_ENV", railsEnv),
+    { name: "DATABASE_HOST", value: db.instance.dbInstanceEndpointAddress },
+    { name: "DATABASE_PORT", value: db.instance.dbInstanceEndpointPort },
+    { name: "DATABASE_USER", value: db.username },
+    { name: "DATABASE_NAME", value: db.databaseName },
+    { name: "DATABASE_PASSWORD", value: db.password.toString() },
+    { name: "RAILS_ENV", value: railsEnv },
   ];
 
   if (railsMasterKey) {
-    envVars.push(buildEnvVar("RAILS_MASTER_KEY", railsMasterKey.toString()));
+    envVars.push({
+      name: "RAILS_MASTER_KEY",
+      value: railsMasterKey.toString(),
+    });
   }
   return envVars;
-}
-
-export function buildEnvVar(optionName: string, value: string) {
-  return {
-    namespace: "aws:elasticbeanstalk:application:environment",
-    optionName,
-    value,
-  };
 }
 
 export interface DatabaseAccess {
@@ -91,6 +87,7 @@ export class RailsEnvironment extends Construct {
       railsMasterKey,
       applicationName,
       environmentName,
+      environmentVariables = [],
     } = props;
 
     const securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
@@ -118,16 +115,20 @@ export class RailsEnvironment extends Construct {
     });
     iamInstanceProfile.addDependsOn(role.node.defaultChild as CfnRole);
 
+    const newEnvironmentVariables = environmentVariables.concat(
+      railsEnvironmentVariables(
+        databaseAccess,
+        railsEnvironment,
+        railsMasterKey
+      )
+    );
+
     const ebEnv = new ElasticbeanstalkEnvironment(this, "ebEnv", {
       ...props,
       solutionStackName: solutionStackName || DEFAULT_SOLUTION_STACK_NAME,
       securityGroup,
       iamInstanceProfile,
-      ...railsEnvironmentVariables(
-        databaseAccess,
-        railsEnvironment,
-        railsMasterKey
-      ),
+      environmentVariables: newEnvironmentVariables,
     });
 
     this.ebEnvironment = ebEnv;

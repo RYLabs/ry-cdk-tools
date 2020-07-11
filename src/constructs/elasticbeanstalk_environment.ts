@@ -72,29 +72,48 @@ function ec2InstanceTypesSetting(
   );
 }
 
+function environmentVariableSettings(
+  envvars?: [EBEnvironmentVariable]
+): CfnEnvironment.OptionSettingProperty[] {
+  return (
+    envvars?.map(
+      (v) =>
+        ({
+          namespace: "aws:elasticbeanstalk:application:environment",
+          optionName: v.name,
+          value: v.value,
+        } as CfnEnvironment.OptionSettingProperty)
+    ) || []
+  );
+}
+
 function isInstanceProfile(
   profile: CfnInstanceProfile | string
 ): profile is CfnInstanceProfile {
   return (profile as CfnInstanceProfile).node !== undefined;
 }
 
+export interface EBEnvironmentVariable {
+  readonly name: String;
+  readonly value: String;
+}
+
 export interface ElasticbeanstalkEnvironmentProps {
-  applicationName: string;
-  environmentName: string;
-  vpc: IVpc;
-  securityGroup: ISecurityGroup;
-  ec2KeyName?: string;
-  applicationVersion: CfnApplicationVersion;
-  ec2InstanceTypes?: string[];
-  solutionStackName: string;
-  rootVolumeType?: string;
-  rootVolumeSize?: number;
-  iamInstanceProfile?: string | CfnInstanceProfile;
+  readonly applicationName: string;
+  readonly environmentName: string;
+  readonly vpc: IVpc;
+  readonly securityGroup: ISecurityGroup;
+  readonly ec2KeyName?: string;
+  readonly applicationVersion: CfnApplicationVersion;
+  readonly ec2InstanceTypes?: string[];
+  readonly solutionStackName: string;
+  readonly rootVolumeType?: string;
+  readonly rootVolumeSize?: number;
+  readonly iamInstanceProfile?: string | CfnInstanceProfile;
+  readonly environmentVariables?: EBEnvironmentVariable[];
 }
 
 export class ElasticbeanstalkEnvironment extends CfnEnvironment {
-  readonly environment: CfnEnvironment;
-
   constructor(
     scope: Construct,
     id: string,
@@ -112,6 +131,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
       rootVolumeType,
       rootVolumeSize,
       iamInstanceProfile = "aws-elasticbeanstalk-ec2-role",
+      environmentVariables,
     } = props;
 
     let _iamInstanceProfile;
@@ -134,6 +154,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
         ...rootVolumeTypeSetting(rootVolumeType),
         ...rootVolumeSizeSetting(rootVolumeSize),
         ...ec2InstanceTypesSetting(ec2InstanceTypes),
+        ...environmentVariableSettings(environmentVariables),
         {
           namespace: "aws:autoscaling:launchconfiguration",
           optionName: "SecurityGroups",
