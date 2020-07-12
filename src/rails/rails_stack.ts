@@ -4,6 +4,7 @@ import {
   CfnApplication,
   CfnEnvironment,
 } from "@aws-cdk/aws-elasticbeanstalk";
+import { ManagedPolicy } from "@aws-cdk/aws-iam";
 import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
 import { RailsEnvironment, RailsEnvironmentProps } from "./rails_environment";
 import { Conventions } from "../core";
@@ -115,6 +116,10 @@ export class RailsStack extends BaseStack {
       ec2InstanceTypes,
       rootVolumeType,
       rootVolumeSize,
+      ec2RoleManagedPolicies: [
+        // This is necessary to session access
+        ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMManagedInstanceCore"),
+      ],
     });
 
     new SessionAccess(this, "sessionAccess", {

@@ -12,6 +12,7 @@ import {
   ServicePrincipal,
   ManagedPolicy,
   CfnInstanceProfile,
+  IManagedPolicy,
 } from "@aws-cdk/aws-iam";
 
 const DEFAULT_SOLUTION_STACK_NAME =
@@ -71,6 +72,11 @@ export interface RailsEnvironmentProps
   railsEnvironment?: string;
 
   solutionStackName?: string;
+
+  /**
+   * Additional policies to attach to the ec2 role
+   */
+  ec2RoleManagedPolicies: IManagedPolicy[];
 }
 
 export class RailsEnvironment extends Construct {
@@ -88,6 +94,7 @@ export class RailsEnvironment extends Construct {
       applicationName,
       environmentName,
       environmentVariables = [],
+      ec2RoleManagedPolicies = [],
     } = props;
 
     const securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
@@ -105,6 +112,7 @@ export class RailsEnvironment extends Construct {
         ManagedPolicy.fromAwsManagedPolicyName(
           "AWSElasticBeanstalkMulticontainerDocker"
         ),
+        ...ec2RoleManagedPolicies,
       ],
       roleName: `${applicationName}-${environmentName}-ec2-role`,
     });
