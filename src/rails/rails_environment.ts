@@ -76,7 +76,7 @@ export interface RailsEnvironmentProps
   /**
    * Additional policies to attach to the ec2 role
    */
-  ec2RoleManagedPolicies: IManagedPolicy[];
+  ec2RoleManagedPolicies?: IManagedPolicy[];
 }
 
 export class RailsEnvironment extends Construct {
