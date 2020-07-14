@@ -87,18 +87,29 @@ function environmentVariableSettings(
   );
 }
 
-function applicationHealthcheckURLSetting(
-  url?: string
-): CfnEnvironment.OptionSettingProperty[] {
-  return optionalSetting(
-    url
-      ? {
-          namespace: "aws:elasticbeanstalk:application",
-          optionName: "Application Healthcheck URL",
-          value: url,
-        }
-      : undefined
-  );
+type SettingsPair = [any, string];
+function defaultProcessSettings({
+  healthCheckInterval,
+  healthCheckPath,
+  healthCheckTimeout,
+  healthyThresholdCount,
+}: EBProcessSettings): CfnEnvironment.OptionSettingProperty[] {
+  return [
+    [healthCheckInterval, "HealthCheckInterval"] as SettingsPair,
+    [healthCheckPath, "HealthCheckPath"] as SettingsPair,
+    [healthCheckTimeout, "HealthCheckTimeout"] as SettingsPair,
+    [healthyThresholdCount, "HealthyThresholdCount"] as SettingsPair,
+  ].reduce((memo, [value, optionName]) => {
+    if (value) {
+      const prop = {
+        namespace: "aws:elasticbeanstalk:environment:process:default",
+        optionName,
+        value: String(value),
+      };
+      memo.push(prop);
+    }
+    return memo;
+  }, [] as CfnEnvironment.OptionSettingProperty[]);
 }
 
 function isInstanceProfile(
@@ -108,8 +119,15 @@ function isInstanceProfile(
 }
 
 export interface EBEnvironmentVariable {
-  readonly name: String;
-  readonly value: String;
+  readonly name: string;
+  readonly value: string;
+}
+
+export interface EBProcessSettings {
+  readonly healthCheckInterval?: number;
+  readonly healthCheckPath?: string;
+  readonly healthCheckTimeout?: number;
+  readonly healthyThresholdCount?: number;
 }
 
 export interface ElasticbeanstalkEnvironmentProps {
@@ -125,7 +143,7 @@ export interface ElasticbeanstalkEnvironmentProps {
   readonly rootVolumeSize?: number;
   readonly iamInstanceProfile?: string | CfnInstanceProfile;
   readonly environmentVariables?: EBEnvironmentVariable[];
-  readonly applicationHealthcheckURL?: string;
+  readonly defaultProcess?: EBProcessSettings;
 }
 
 export class ElasticbeanstalkEnvironment extends CfnEnvironment {
@@ -147,7 +165,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
       rootVolumeSize,
       iamInstanceProfile = "aws-elasticbeanstalk-ec2-role",
       environmentVariables,
-      applicationHealthcheckURL,
+      defaultProcess = {},
     } = props;
 
     let _iamInstanceProfile;
@@ -171,7 +189,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
         ...rootVolumeSizeSetting(rootVolumeSize),
         ...ec2InstanceTypesSetting(ec2InstanceTypes),
         ...environmentVariableSettings(environmentVariables),
-        ...applicationHealthcheckURLSetting(applicationHealthcheckURL),
+        ...defaultProcessSettings(defaultProcess),
         {
           namespace: "aws:autoscaling:launchconfiguration",
           optionName: "SecurityGroups",

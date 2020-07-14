@@ -76,7 +76,7 @@ export class RailsStack extends BaseStack {
       rootVolumeSize = 50,
       vpc,
       ec2RoleManagedPolicies = [],
-      applicationHealthcheckURL,
+      defaultProcess,
     } = props;
 
     // Setup the EB app.
@@ -123,7 +123,7 @@ export class RailsStack extends BaseStack {
         ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMManagedInstanceCore"),
         ...ec2RoleManagedPolicies,
       ],
-      applicationHealthcheckURL,
+      defaultProcess,
     });
 
     new SessionAccess(this, "sessionAccess", {
