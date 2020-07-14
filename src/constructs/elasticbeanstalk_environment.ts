@@ -87,6 +87,20 @@ function environmentVariableSettings(
   );
 }
 
+function applicationHealthcheckURLSetting(
+  url?: string
+): CfnEnvironment.OptionSettingProperty[] {
+  return optionalSetting(
+    url
+      ? {
+          namespace: "aws:elasticbeanstalk:application",
+          optionName: "Application Healthcheck URL",
+          value: url,
+        }
+      : undefined
+  );
+}
+
 function isInstanceProfile(
   profile: CfnInstanceProfile | string
 ): profile is CfnInstanceProfile {
@@ -111,6 +125,7 @@ export interface ElasticbeanstalkEnvironmentProps {
   readonly rootVolumeSize?: number;
   readonly iamInstanceProfile?: string | CfnInstanceProfile;
   readonly environmentVariables?: EBEnvironmentVariable[];
+  readonly applicationHealthcheckURL?: string;
 }
 
 export class ElasticbeanstalkEnvironment extends CfnEnvironment {
@@ -132,6 +147,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
       rootVolumeSize,
       iamInstanceProfile = "aws-elasticbeanstalk-ec2-role",
       environmentVariables,
+      applicationHealthcheckURL,
     } = props;
 
     let _iamInstanceProfile;
@@ -155,6 +171,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
         ...rootVolumeSizeSetting(rootVolumeSize),
         ...ec2InstanceTypesSetting(ec2InstanceTypes),
         ...environmentVariableSettings(environmentVariables),
+        ...applicationHealthcheckURLSetting(applicationHealthcheckURL),
         {
           namespace: "aws:autoscaling:launchconfiguration",
           optionName: "SecurityGroups",
