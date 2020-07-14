@@ -95,7 +95,7 @@ export class RailsEnvironment extends Construct {
       environmentName,
       environmentVariables = [],
       ec2RoleManagedPolicies = [],
-      defaultProcess
+      defaultProcess,
     } = props;
 
     const securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
