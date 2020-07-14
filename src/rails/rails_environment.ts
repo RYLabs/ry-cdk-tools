@@ -95,6 +95,7 @@ export class RailsEnvironment extends Construct {
       environmentName,
       environmentVariables = [],
       ec2RoleManagedPolicies = [],
+      applicationHealthcheckURL,
     } = props;
 
     const securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
@@ -137,6 +138,7 @@ export class RailsEnvironment extends Construct {
       securityGroup,
       iamInstanceProfile,
       environmentVariables: newEnvironmentVariables,
+      applicationHealthcheckURL,
     });
 
     this.ebEnvironment = ebEnv;
