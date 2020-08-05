@@ -13,6 +13,7 @@ import {
   DnsValidatedCertificate,
 } from "@aws-cdk/aws-certificatemanager";
 import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
+import { SessionAccess } from "../constructs/session_access";
 
 export interface EcsStackProps extends BaseStackProps {
   readonly baseDomain: string;
@@ -107,6 +108,12 @@ export class EcsStack extends BaseStack {
       recordName: "*",
       ttl: Duration.minutes(5),
       target: RecordTarget.fromAlias(new LoadBalancerTarget(lb)),
+    });
+
+    new SessionAccess(this, "sessionAccess", {
+      name: this.conventions.eqn("camel"),
+      ec2InstanceTag: "aws:cloudformation:stack-name",
+      ec2InstanceTagValue: this.stackName,
     });
   }
 }
