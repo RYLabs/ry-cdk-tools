@@ -1,10 +1,20 @@
 import { Construct } from "@aws-cdk/core";
-import { Group, PolicyStatement, Effect, Policy } from "@aws-cdk/aws-iam";
+import {
+  Group,
+  PolicyStatement,
+  Effect,
+  Policy,
+  ManagedPolicy,
+} from "@aws-cdk/aws-iam";
 
 export interface SessionAccessProps {
   name?: string;
   ec2InstanceTag: string;
   ec2InstanceTagValue: string;
+}
+
+export function ssmManagedInstancePolicy() {
+  return ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMManagedInstanceCore");
 }
 
 export class SessionAccess extends Construct {

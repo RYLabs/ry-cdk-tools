@@ -1,48 +1,54 @@
 import { App, Duration } from "@aws-cdk/core";
 import { IVpc, InstanceType, SecurityGroup, Port } from "@aws-cdk/aws-ec2";
-import { Cluster } from "@aws-cdk/aws-ecs";
+import { Cluster, EcsOptimizedAmi } from "@aws-cdk/aws-ecs";
 import {
-  ApplicationListener,
-  ApplicationLoadBalancer,
-  ContentType,
-} from "@aws-cdk/aws-elasticloadbalancingv2";
-import { HostedZone, ARecord, RecordTarget } from "@aws-cdk/aws-route53";
+  IHostedZone,
+  HostedZone,
+  ARecord,
+  RecordTarget,
+} from "@aws-cdk/aws-route53";
 import { LoadBalancerTarget } from "@aws-cdk/aws-route53-targets";
-import {
-  Certificate,
-  DnsValidatedCertificate,
-} from "@aws-cdk/aws-certificatemanager";
+import { DnsValidatedCertificate } from "@aws-cdk/aws-certificatemanager";
+import { AutoScalingGroup, UpdateType } from "@aws-cdk/aws-autoscaling";
+import { Role, ServicePrincipal, ManagedPolicy } from "@aws-cdk/aws-iam";
 import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
-import { SessionAccess } from "../constructs/session_access";
+import {
+  SessionAccess,
+  ssmManagedInstancePolicy,
+} from "../constructs/session_access";
+import { SimpleLoadBalancer } from "../constructs/simple_load_balancer";
 
 export interface EcsStackProps extends BaseStackProps {
-  readonly baseDomain: string;
   readonly vpc: IVpc;
   readonly description?: string;
   readonly instanceTypeIdentifier?: string;
-  readonly certificateArn?: string;
+  readonly httpsCertificateArn?: string;
+  readonly wildcardDomain?: string;
 }
 
 export class EcsStack extends BaseStack {
-  cluster: Cluster;
-  httpListener: ApplicationListener;
-  httpsListener: ApplicationListener;
-  baseDomain: string;
+  readonly cluster: Cluster;
+  readonly wildcardDomain?: string;
 
   constructor(scope: App, id: string, props: EcsStackProps) {
     super(scope, id, props);
 
     const {
       vpc,
-      baseDomain,
-      certificateArn,
+      httpsCertificateArn,
       instanceTypeIdentifier = "t2.micro",
+      wildcardDomain,
     } = props;
-    this.baseDomain = baseDomain;
 
     const securityGroup = new SecurityGroup(this, "securityGroup", {
-      securityGroupName: this.conventions.eqn(),
+      securityGroupName: `${this.conventions.eqn()}-ecs-sg`,
       vpc,
+    });
+
+    const role = new Role(this, "InstanceRole", {
+      roleName: `${this.conventions.eqn("camel")}ECSInstanceRole`,
+      assumedBy: new ServicePrincipal("ec2.amazonaws.com"),
+      managedPolicies: [ssmManagedInstancePolicy()],
     });
 
     const cluster = new Cluster(this, "ecs", {
@@ -50,65 +56,61 @@ export class EcsStack extends BaseStack {
       vpc,
     });
 
-    cluster.addCapacity("DefaultAutoScalingGroupCapacity", {
+    const asg = new AutoScalingGroup(this, "DefaultAutoScalingGroupCapacity", {
+      vpc,
+      machineImage: new EcsOptimizedAmi(),
+      updateType: UpdateType.REPLACING_UPDATE,
       instanceType: new InstanceType(instanceTypeIdentifier),
       desiredCapacity: 1,
+      autoScalingGroupName: `${this.conventions.eqn()}-default-asg`,
+      securityGroup,
+      role,
     });
 
-    cluster.connections.allowTo(
-      securityGroup,
-      Port.allTcp(),
-      "Default VPC security group"
-    );
+    cluster.addAutoScalingGroup(asg);
 
     this.cluster = cluster;
 
-    const hostedZone = HostedZone.fromLookup(this, "servicesDomain", {
-      domainName: baseDomain,
-    });
+    const httpsCertificates = [];
 
-    const lb = new ApplicationLoadBalancer(this, "lb", {
-      vpc: vpc,
-      http2Enabled: true,
-      internetFacing: true,
-      loadBalancerName: `${this.conventions.eqn()}-alb`,
-    });
+    let wildcardHostedZone: IHostedZone | undefined;
 
-    this.httpListener = lb.addListener("httpListener", {
-      port: 80,
-    });
-
-    let cert = null;
-    if (certificateArn) {
-      cert = Certificate.fromCertificateArn(this, "httpsCert", certificateArn);
-    } else {
-      cert = new DnsValidatedCertificate(this, "httpsCert", {
-        domainName: `*.${baseDomain}`,
-        hostedZone,
+    if (wildcardDomain) {
+      wildcardHostedZone = HostedZone.fromLookup(this, "servicesDomain", {
+        domainName: wildcardDomain,
       });
+
+      httpsCertificates.push(
+        new DnsValidatedCertificate(this, "httpsCert", {
+          domainName: `*.${wildcardDomain}`,
+          hostedZone: wildcardHostedZone,
+        })
+      );
     }
 
-    this.httpsListener = lb.addListener("httpsListener", {
-      port: 443,
-      certificates: [cert],
+    const loadBalancer = new SimpleLoadBalancer(this, "loadBalancer", {
+      vpc,
+      conventions: this.conventions,
+      httpsCertificateArn,
+      httpsCertificates,
     });
 
-    [this.httpListener, this.httpsListener].forEach((l) => {
-      // Add a default handler that just renders a 404
-      l.addFixedResponse("Fallback handler", {
-        contentType: ContentType.TEXT_PLAIN,
-        messageBody: "Not Found",
-        statusCode: "404",
+    loadBalancer.securityGroup.connections.allowTo(
+      securityGroup,
+      Port.allTcp()
+    );
+
+    if (wildcardHostedZone) {
+      new ARecord(this, "wildcardDns", {
+        zone: wildcardHostedZone,
+        comment: "Wildcard record for services load balancer",
+        recordName: "*",
+        ttl: Duration.minutes(5),
+        target: RecordTarget.fromAlias(
+          new LoadBalancerTarget(loadBalancer.alb)
+        ),
       });
-    });
-
-    new ARecord(this, "wildcardDns", {
-      zone: hostedZone,
-      comment: "Wildcard record for services load balancer",
-      recordName: "*",
-      ttl: Duration.minutes(5),
-      target: RecordTarget.fromAlias(new LoadBalancerTarget(lb)),
-    });
+    }
 
     new SessionAccess(this, "sessionAccess", {
       name: this.conventions.eqn("camel"),
