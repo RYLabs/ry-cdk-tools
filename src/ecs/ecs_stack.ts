@@ -8,9 +8,12 @@ import {
   RecordTarget,
 } from "@aws-cdk/aws-route53";
 import { LoadBalancerTarget } from "@aws-cdk/aws-route53-targets";
-import { DnsValidatedCertificate } from "@aws-cdk/aws-certificatemanager";
+import {
+  DnsValidatedCertificate,
+  Certificate,
+} from "@aws-cdk/aws-certificatemanager";
 import { AutoScalingGroup, UpdateType } from "@aws-cdk/aws-autoscaling";
-import { Role, ServicePrincipal, ManagedPolicy } from "@aws-cdk/aws-iam";
+import { Role, ServicePrincipal } from "@aws-cdk/aws-iam";
 import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
 import {
   SessionAccess,
@@ -22,7 +25,7 @@ export interface EcsStackProps extends BaseStackProps {
   readonly vpc: IVpc;
   readonly description?: string;
   readonly instanceTypeIdentifier?: string;
-  readonly httpsCertificateArn?: string;
+  readonly wildcardHttpsCertificateArn?: string;
   readonly wildcardDomain?: string;
 }
 
@@ -35,8 +38,8 @@ export class EcsStack extends BaseStack {
 
     const {
       vpc,
-      httpsCertificateArn,
       instanceTypeIdentifier = "t2.micro",
+      wildcardHttpsCertificateArn,
       wildcardDomain,
     } = props;
 
@@ -80,18 +83,27 @@ export class EcsStack extends BaseStack {
         domainName: wildcardDomain,
       });
 
-      httpsCertificates.push(
-        new DnsValidatedCertificate(this, "httpsCert", {
+      let wildcardCert = null;
+
+      if (wildcardHttpsCertificateArn) {
+        wildcardCert = Certificate.fromCertificateArn(
+          this,
+          "httpsCert",
+          wildcardHttpsCertificateArn
+        );
+      } else {
+        wildcardCert = new DnsValidatedCertificate(this, "httpsCert", {
           domainName: `*.${wildcardDomain}`,
           hostedZone: wildcardHostedZone,
-        })
-      );
+        });
+      }
+
+      httpsCertificates.push(wildcardCert);
     }
 
     const loadBalancer = new SimpleLoadBalancer(this, "loadBalancer", {
       vpc,
       conventions: this.conventions,
-      httpsCertificateArn,
       httpsCertificates,
     });
 

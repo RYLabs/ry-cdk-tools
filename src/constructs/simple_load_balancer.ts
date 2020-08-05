@@ -6,13 +6,11 @@ import {
   ContentType,
   IListenerCertificate,
 } from "@aws-cdk/aws-elasticloadbalancingv2";
-import { Certificate } from "@aws-cdk/aws-certificatemanager";
 import { Conventions } from "../core";
 
 export interface SimpleLoadBalancerProps {
   readonly vpc: IVpc;
   readonly conventions: Conventions;
-  readonly httpsCertificateArn?: string;
   readonly httpsCertificates?: IListenerCertificate[];
 }
 
@@ -25,12 +23,7 @@ export class SimpleLoadBalancer extends Construct {
   constructor(scope: Construct, id: string, props: SimpleLoadBalancerProps) {
     super(scope, id);
 
-    const {
-      vpc,
-      httpsCertificateArn,
-      httpsCertificates = [],
-      conventions,
-    } = props;
+    const { vpc, httpsCertificates = [], conventions } = props;
 
     this.securityGroup = new SecurityGroup(this, "securityGroup", {
       securityGroupName: `${conventions.eqn()}-alb-sg`,
@@ -52,12 +45,6 @@ export class SimpleLoadBalancer extends Construct {
       port: 80,
     });
     listeners.push(this.httpListener);
-
-    if (httpsCertificateArn) {
-      httpsCertificates.push(
-        Certificate.fromCertificateArn(this, "httpsCert", httpsCertificateArn)
-      );
-    }
 
     if (httpsCertificates.length) {
       this.httpsListener = this.alb.addListener("httpsListener", {
