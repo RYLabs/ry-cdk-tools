@@ -25,6 +25,7 @@ export interface EcsStackProps extends BaseStackProps {
 export class EcsStack extends BaseStack {
   readonly cluster: Cluster;
   readonly wildcardDomain?: string;
+  readonly loadBalancer: SimpleLoadBalancer;
 
   constructor(scope: App, id: string, props: EcsStackProps) {
     super(scope, id, props);
@@ -64,6 +65,7 @@ export class EcsStack extends BaseStack {
         conventions: this.conventions,
       });
     }
+    this.loadBalancer = loadBalancer;
 
     loadBalancer.securityGroup.connections.allowTo(
       cluster.securityGroup,
