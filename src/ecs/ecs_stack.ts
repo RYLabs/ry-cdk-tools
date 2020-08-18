@@ -1,5 +1,5 @@
 import { App } from "@aws-cdk/core";
-import { IVpc, Port } from "@aws-cdk/aws-ec2";
+import { Port } from "@aws-cdk/aws-ec2";
 import { Cluster } from "@aws-cdk/aws-ecs";
 import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
 import {
