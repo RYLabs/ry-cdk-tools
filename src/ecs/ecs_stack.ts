@@ -1,28 +1,21 @@
-import { App, Duration } from "@aws-cdk/core";
-import { IVpc, InstanceType, SecurityGroup, Port } from "@aws-cdk/aws-ec2";
-import { Cluster, EcsOptimizedAmi } from "@aws-cdk/aws-ecs";
-import {
-  IHostedZone,
-  HostedZone,
-  ARecord,
-  RecordTarget,
-} from "@aws-cdk/aws-route53";
-import { LoadBalancerTarget } from "@aws-cdk/aws-route53-targets";
-import {
-  DnsValidatedCertificate,
-  Certificate,
-} from "@aws-cdk/aws-certificatemanager";
-import { AutoScalingGroup, UpdateType } from "@aws-cdk/aws-autoscaling";
-import { Role, ServicePrincipal } from "@aws-cdk/aws-iam";
+import { App } from "@aws-cdk/core";
+import { IVpc, Port } from "@aws-cdk/aws-ec2";
+import { Cluster } from "@aws-cdk/aws-ecs";
 import BaseStack, { BaseStackProps } from "../base_stacks/base_stack";
 import {
   SessionAccess,
   ssmManagedInstancePolicy,
 } from "../constructs/session_access";
 import { SimpleLoadBalancer } from "../constructs/simple_load_balancer";
+import { SimpleCluster } from "./simple_cluster";
+import { IVpcLookup, resolveVpc } from "../utils/lookups";
 
 export interface EcsStackProps extends BaseStackProps {
-  readonly vpc: IVpc;
+  /**
+   * Provide the Vpc for the RDS using a direct reference or via lookup options
+   */
+  readonly vpc: IVpcLookup;
+
   readonly description?: string;
   readonly instanceTypeIdentifier?: string;
   readonly wildcardHttpsCertificateArn?: string;
@@ -37,92 +30,45 @@ export class EcsStack extends BaseStack {
     super(scope, id, props);
 
     const {
-      vpc,
-      instanceTypeIdentifier = "t2.micro",
+      vpc: vpcProp,
+      instanceTypeIdentifier,
       wildcardHttpsCertificateArn,
       wildcardDomain,
     } = props;
 
-    const securityGroup = new SecurityGroup(this, "securityGroup", {
-      securityGroupName: `${this.conventions.eqn()}-ecs-sg`,
+    const vpc = resolveVpc(this, vpcProp);
+
+    const simpleCluster = new SimpleCluster(scope, "cluster", {
       vpc,
-    });
-
-    const role = new Role(this, "InstanceRole", {
-      roleName: `${this.conventions.eqn("camel")}ECSInstanceRole`,
-      assumedBy: new ServicePrincipal("ec2.amazonaws.com"),
-      managedPolicies: [ssmManagedInstancePolicy()],
-    });
-
-    const cluster = new Cluster(this, "ecs", {
       clusterName: this.conventions.eqn(),
-      vpc,
+      instanceManagedPolicies: [ssmManagedInstancePolicy()],
+      instanceTypeIdentifier,
     });
+    this.cluster = simpleCluster.cluster;
 
-    const asg = new AutoScalingGroup(this, "DefaultAutoScalingGroupCapacity", {
-      vpc,
-      machineImage: new EcsOptimizedAmi(),
-      updateType: UpdateType.REPLACING_UPDATE,
-      instanceType: new InstanceType(instanceTypeIdentifier),
-      desiredCapacity: 1,
-      autoScalingGroupName: `${this.conventions.eqn()}-default-asg`,
-      securityGroup,
-      role,
-    });
-
-    cluster.addAutoScalingGroup(asg);
-
-    this.cluster = cluster;
-
-    const httpsCertificates = [];
-
-    let wildcardHostedZone: IHostedZone | undefined;
-
+    let loadBalancer = null;
     if (wildcardDomain) {
-      wildcardHostedZone = HostedZone.fromLookup(this, "servicesDomain", {
-        domainName: wildcardDomain,
+      loadBalancer = SimpleLoadBalancer.withWildcardDomain(
+        this,
+        "loadBalancer",
+        {
+          vpc,
+          conventions: this.conventions,
+          certificateArn: wildcardHttpsCertificateArn,
+          baseDomain: wildcardDomain,
+        }
+      );
+    } else {
+      loadBalancer = new SimpleLoadBalancer(this, "loadBalancer", {
+        vpc,
+        conventions: this.conventions,
       });
-
-      let wildcardCert = null;
-
-      if (wildcardHttpsCertificateArn) {
-        wildcardCert = Certificate.fromCertificateArn(
-          this,
-          "httpsCert",
-          wildcardHttpsCertificateArn
-        );
-      } else {
-        wildcardCert = new DnsValidatedCertificate(this, "httpsCert", {
-          domainName: `*.${wildcardDomain}`,
-          hostedZone: wildcardHostedZone,
-        });
-      }
-
-      httpsCertificates.push(wildcardCert);
     }
-
-    const loadBalancer = new SimpleLoadBalancer(this, "loadBalancer", {
-      vpc,
-      conventions: this.conventions,
-      httpsCertificates,
-    });
 
     loadBalancer.securityGroup.connections.allowTo(
-      securityGroup,
+      simpleCluster.securityGroup,
       Port.allTcp()
     );
-
-    if (wildcardHostedZone) {
-      new ARecord(this, "wildcardDns", {
-        zone: wildcardHostedZone,
-        comment: "Wildcard record for services load balancer",
-        recordName: "*",
-        ttl: Duration.minutes(5),
-        target: RecordTarget.fromAlias(
-          new LoadBalancerTarget(loadBalancer.alb)
-        ),
-      });
-    }
 
     new SessionAccess(this, "sessionAccess", {
       name: this.conventions.eqn("camel"),

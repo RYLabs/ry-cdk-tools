@@ -1,4 +1,4 @@
-import { Construct } from "@aws-cdk/core";
+import { Construct, Duration } from "@aws-cdk/core";
 import { IVpc, SecurityGroup } from "@aws-cdk/aws-ec2";
 import {
   ApplicationListener,
@@ -6,6 +6,17 @@ import {
   ContentType,
   IListenerCertificate,
 } from "@aws-cdk/aws-elasticloadbalancingv2";
+import { LoadBalancerTarget } from "@aws-cdk/aws-route53-targets";
+import {
+  IHostedZone,
+  HostedZone,
+  ARecord,
+  RecordTarget,
+} from "@aws-cdk/aws-route53";
+import {
+  DnsValidatedCertificate,
+  Certificate,
+} from "@aws-cdk/aws-certificatemanager";
 import { Conventions } from "../core";
 
 export interface SimpleLoadBalancerProps {
@@ -14,11 +25,59 @@ export interface SimpleLoadBalancerProps {
   readonly httpsCertificates?: IListenerCertificate[];
 }
 
+export interface WildcardDomainLoadBalancerProps
+  extends SimpleLoadBalancerProps {
+  readonly baseDomain: string;
+  readonly certificateArn?: string;
+}
+
 export class SimpleLoadBalancer extends Construct {
   readonly alb: ApplicationLoadBalancer;
   readonly httpListener: ApplicationListener;
   readonly httpsListener: ApplicationListener;
   readonly securityGroup: SecurityGroup;
+
+  static withWildcardDomain(
+    scope: Construct,
+    id: string,
+    props: WildcardDomainLoadBalancerProps
+  ) {
+    const { baseDomain, certificateArn, httpsCertificates = [] } = props;
+
+    let hostedZone: IHostedZone | undefined;
+
+    hostedZone = HostedZone.fromLookup(scope, "hostedZone", {
+      domainName: baseDomain,
+    });
+
+    if (certificateArn) {
+      httpsCertificates.push(
+        Certificate.fromCertificateArn(scope, "httpsCert", certificateArn)
+      );
+    } else {
+      httpsCertificates.push(
+        new DnsValidatedCertificate(scope, "httpsCert", {
+          domainName: `*.${baseDomain}`,
+          hostedZone,
+        })
+      );
+    }
+
+    const loadBalancer = new SimpleLoadBalancer(scope, id, {
+      ...props,
+      httpsCertificates,
+    });
+
+    new ARecord(scope, "wildcardDns", {
+      zone: hostedZone,
+      comment: "Wildcard record for services load balancer",
+      recordName: "*",
+      ttl: Duration.minutes(5),
+      target: RecordTarget.fromAlias(new LoadBalancerTarget(loadBalancer.alb)),
+    });
+
+    return loadBalancer;
+  }
 
   constructor(scope: Construct, id: string, props: SimpleLoadBalancerProps) {
     super(scope, id);
