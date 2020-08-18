@@ -8,3 +8,4 @@ export { default as RyDatabaseInstance } from "./ry_database_instance";
 export * from "./ry_database_instance";
 
 export * from "../utils/app_info";
+export * from "../utils/lookups";

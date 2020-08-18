@@ -38,13 +38,13 @@ export class EcsStack extends BaseStack {
 
     const vpc = resolveVpc(this, vpcProp);
 
-    const simpleCluster = new SimpleCluster(scope, "cluster", {
+    const cluster = new SimpleCluster(scope, "cluster", {
       vpc,
       clusterName: this.conventions.eqn(),
       instanceManagedPolicies: [ssmManagedInstancePolicy()],
       instanceTypeIdentifier,
     });
-    this.cluster = simpleCluster.cluster;
+    this.cluster = cluster;
 
     let loadBalancer = null;
     if (wildcardDomain) {
@@ -66,7 +66,7 @@ export class EcsStack extends BaseStack {
     }
 
     loadBalancer.securityGroup.connections.allowTo(
-      simpleCluster.securityGroup,
+      cluster.securityGroup,
       Port.allTcp()
     );
 
