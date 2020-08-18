@@ -38,7 +38,7 @@ export class EcsStack extends BaseStack {
 
     const vpc = resolveVpc(this, vpcProp);
 
-    const cluster = new SimpleCluster(scope, "cluster", {
+    const cluster = new SimpleCluster(this, "cluster", {
       vpc,
       clusterName: this.conventions.eqn(),
       instanceManagedPolicies: [ssmManagedInstancePolicy()],
