@@ -92,8 +92,8 @@ export default class RyDatabaseInstance extends DatabaseInstance
 
             // RDS doesn't like @ / or \ values.  Elasticbeanstalk will choke on
             // backticks, so to be safe we're just going to avoid all quote
-            // characters.
-            excludeCharacters: "{}[]\"'`@/\\",
+            // characters.  Also exclude % for URI escape codes
+            excludeCharacters: "{}[]\"'`@/\\%",
 
             passwordLength: 16,
             secretStringTemplate: JSON.stringify({
