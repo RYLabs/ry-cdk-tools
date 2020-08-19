@@ -7,6 +7,7 @@ import { Protocol, BaseService } from "@aws-cdk/aws-ecs";
 export interface ServiceOptions {
   readonly priority?: number;
   readonly healthCheck?: HealthCheck;
+  readonly targetGroupName?: string;
   readonly hostHeader: string;
 }
 
@@ -21,10 +22,11 @@ export function registerServiceToListeners(
   }
 
   const { containerName, containerPort } = container;
-  const { priority = 100, hostHeader, healthCheck } = options;
+  const { priority = 100, hostHeader, healthCheck, targetGroupName } = options;
 
   listeners.forEach((listener) => {
     listener.addTargets(`targetGroup${containerName}${containerPort}`, {
+      targetGroupName,
       port: 80,
       hostHeader,
       priority,
