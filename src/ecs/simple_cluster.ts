@@ -1,4 +1,4 @@
-import { IVpc, InstanceType, SecurityGroup } from "@aws-cdk/aws-ec2";
+import { InstanceType, SecurityGroup } from "@aws-cdk/aws-ec2";
 import { Cluster, ClusterProps, EcsOptimizedAmi } from "@aws-cdk/aws-ecs";
 import { Construct } from "@aws-cdk/core";
 import { Role, ServicePrincipal, IManagedPolicy } from "@aws-cdk/aws-iam";
