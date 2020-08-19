@@ -20,6 +20,8 @@ export interface EcsStackProps extends BaseStackProps {
   readonly instanceTypeIdentifier?: string;
   readonly wildcardHttpsCertificateArn?: string;
   readonly wildcardDomain?: string;
+  readonly autoScalingMinCapacity?: number;
+  readonly autoScalingMaxCapacity?: number;
 }
 
 export class EcsStack extends BaseStack {
@@ -35,6 +37,8 @@ export class EcsStack extends BaseStack {
       instanceTypeIdentifier,
       wildcardHttpsCertificateArn,
       wildcardDomain,
+      autoScalingMaxCapacity,
+      autoScalingMinCapacity,
     } = props;
 
     const vpc = resolveVpc(this, vpcProp);
@@ -44,6 +48,8 @@ export class EcsStack extends BaseStack {
       clusterName: this.conventions.eqn(),
       instanceManagedPolicies: [ssmManagedInstancePolicy()],
       instanceTypeIdentifier,
+      autoScalingMaxCapacity,
+      autoScalingMinCapacity,
     });
     this.cluster = cluster;
 

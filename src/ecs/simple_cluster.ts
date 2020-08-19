@@ -7,6 +7,8 @@ import { AutoScalingGroup, UpdateType } from "@aws-cdk/aws-autoscaling";
 export interface SimpleClusterProps extends ClusterProps {
   readonly instanceTypeIdentifier?: string;
   readonly instanceManagedPolicies?: IManagedPolicy[];
+  readonly autoScalingMinCapacity?: number;
+  readonly autoScalingMaxCapacity?: number;
 }
 
 export class SimpleCluster extends Cluster {
@@ -18,6 +20,8 @@ export class SimpleCluster extends Cluster {
     const {
       instanceTypeIdentifier = "t2.micro",
       instanceManagedPolicies: managedPolicies = [],
+      autoScalingMinCapacity,
+      autoScalingMaxCapacity = 2,
     } = props;
 
     const securityGroup = new SecurityGroup(this, "securityGroup", {
@@ -36,7 +40,8 @@ export class SimpleCluster extends Cluster {
       machineImage: new EcsOptimizedAmi(),
       updateType: UpdateType.REPLACING_UPDATE,
       instanceType: new InstanceType(instanceTypeIdentifier),
-      desiredCapacity: 1,
+      minCapacity: autoScalingMinCapacity,
+      maxCapacity: autoScalingMaxCapacity,
       autoScalingGroupName: `${this.clusterName}-default-asg`,
       securityGroup,
       role,
