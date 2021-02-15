@@ -118,7 +118,7 @@ function commandSettings({
 }: EBCommandSettings): CfnEnvironment.OptionSettingProperty[] {
   return [
     [deploymentPolicy, "DeploymentPolicy"] as SettingsPair,
-    [ignoreHealthCheck, "IgnoreHealthCheck"] as SettingsPair,
+    [ignoreHealthCheck + "", "IgnoreHealthCheck"] as SettingsPair,
   ].reduce((memo, [value, optionName]) => {
     if (value) {
       const prop = {
