@@ -20,7 +20,7 @@ import {
 } from "@aws-cdk/aws-iam";
 
 const DEFAULT_SOLUTION_STACK_NAME =
-  "64bit Amazon Linux 2018.03 v2.11.7 running Ruby 2.6 (Puma)";
+  "64bit Amazon Linux 2 v3.2.2 running Ruby 2.7";
 
 function railsEnvironmentVariables(
   db: DatabaseAccess,
