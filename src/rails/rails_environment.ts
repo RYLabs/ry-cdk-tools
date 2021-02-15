@@ -5,7 +5,11 @@ import {
   EBEnvironmentVariable,
 } from "../constructs/elasticbeanstalk_environment";
 import { ISecurityGroup, SecurityGroup, Port } from "@aws-cdk/aws-ec2";
-import { IDatabaseInstance } from "@aws-cdk/aws-rds";
+import {
+  DatabaseInstance,
+  DatabaseInstanceAttributes,
+  IDatabaseInstance,
+} from "@aws-cdk/aws-rds";
 import {
   Role,
   CfnRole,
@@ -41,6 +45,14 @@ function railsEnvironmentVariables(
   return envVars;
 }
 
+export interface DatabaseAccessOptions {
+  instance: IDatabaseInstance | DatabaseInstanceAttributes;
+  securityGroup: ISecurityGroup | string;
+  username: string;
+  password: SecretValue | string;
+  databaseName: string;
+}
+
 export interface DatabaseAccess {
   instance: IDatabaseInstance;
   securityGroup: ISecurityGroup;
@@ -57,7 +69,7 @@ export interface RailsEnvironmentProps
   /**
    * Database access information for generating the database.yml
    */
-  databaseAccess: DatabaseAccess;
+  databaseAccess: DatabaseAccessOptions;
 
   /**
    * RAILS_MASTER_KEY value
@@ -79,6 +91,38 @@ export interface RailsEnvironmentProps
   ec2RoleManagedPolicies?: IManagedPolicy[];
 }
 
+function resolveDatabaseAccess(
+  scope: Construct,
+  options: DatabaseAccessOptions
+) {
+  return {
+    instance:
+      "node" in options.instance
+        ? options.instance
+        : DatabaseInstance.fromDatabaseInstanceAttributes(
+            scope,
+            "dbInst",
+            options.instance
+          ),
+    securityGroup:
+      typeof options.securityGroup === "string"
+        ? SecurityGroup.fromSecurityGroupId(
+            scope,
+            "dbSecGrp",
+            options.securityGroup
+          )
+        : options.securityGroup,
+    username: options.username,
+    password:
+      typeof options.password === "string"
+        ? SecretValue.secretsManager(options.password, {
+            jsonField: options.password,
+          })
+        : options.password,
+    databaseName: options.databaseName,
+  };
+}
+
 export class RailsEnvironment extends Construct {
   ebEnvironment: ElasticbeanstalkEnvironment;
 
@@ -98,10 +142,12 @@ export class RailsEnvironment extends Construct {
       defaultProcess,
     } = props;
 
+    const dbAccess = resolveDatabaseAccess(scope, databaseAccess);
+
     const securityGroup = new SecurityGroup(this, "securityGroup", { vpc });
     securityGroup.connections.allowTo(
-      databaseAccess.securityGroup,
-      Port.tcp(databaseAccess.instance.instanceEndpoint.port),
+      dbAccess.securityGroup,
+      Port.tcp(dbAccess.instance.instanceEndpoint.port),
       `${id} app`
     );
 
@@ -125,11 +171,7 @@ export class RailsEnvironment extends Construct {
     iamInstanceProfile.addDependsOn(role.node.defaultChild as CfnRole);
 
     const newEnvironmentVariables = environmentVariables.concat(
-      railsEnvironmentVariables(
-        databaseAccess,
-        railsEnvironment,
-        railsMasterKey
-      )
+      railsEnvironmentVariables(dbAccess, railsEnvironment, railsMasterKey)
     );
 
     const ebEnv = new ElasticbeanstalkEnvironment(this, "ebEnv", {
