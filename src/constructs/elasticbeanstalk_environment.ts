@@ -112,6 +112,26 @@ function defaultProcessSettings({
   }, [] as CfnEnvironment.OptionSettingProperty[]);
 }
 
+function commandSettings({
+  deploymentPolicy = "Rolling",
+  ignoreHealthCheck = false,
+}: EBCommandSettings): CfnEnvironment.OptionSettingProperty[] {
+  return [
+    [deploymentPolicy, "DeploymentPolicy"] as SettingsPair,
+    [ignoreHealthCheck, "IgnoreHealthCheck"] as SettingsPair,
+  ].reduce((memo, [value, optionName]) => {
+    if (value) {
+      const prop = {
+        namespace: "aws:elasticbeanstalk:command",
+        optionName,
+        value,
+      };
+      memo.push(prop);
+    }
+    return memo;
+  }, [] as CfnEnvironment.OptionSettingProperty[]);
+}
+
 function isInstanceProfile(
   profile: CfnInstanceProfile | string
 ): profile is CfnInstanceProfile {
@@ -130,6 +150,11 @@ export interface EBProcessSettings {
   readonly healthyThresholdCount?: number;
 }
 
+export interface EBCommandSettings {
+  readonly ignoreHealthCheck?: boolean;
+  readonly deploymentPolicy?: string;
+}
+
 export interface ElasticbeanstalkEnvironmentProps {
   readonly applicationName: string;
   readonly environmentName: string;
@@ -144,6 +169,7 @@ export interface ElasticbeanstalkEnvironmentProps {
   readonly iamInstanceProfile?: string | CfnInstanceProfile;
   readonly environmentVariables?: EBEnvironmentVariable[];
   readonly defaultProcess?: EBProcessSettings;
+  readonly command?: EBCommandSettings;
 }
 
 export class ElasticbeanstalkEnvironment extends CfnEnvironment {
@@ -166,6 +192,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
       iamInstanceProfile = "aws-elasticbeanstalk-ec2-role",
       environmentVariables,
       defaultProcess = {},
+      command = {},
     } = props;
 
     let _iamInstanceProfile;
@@ -190,6 +217,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
         ...ec2InstanceTypesSetting(ec2InstanceTypes),
         ...environmentVariableSettings(environmentVariables),
         ...defaultProcessSettings(defaultProcess),
+        ...commandSettings(command),
         {
           namespace: "aws:autoscaling:launchconfiguration",
           optionName: "SecurityGroups",
@@ -224,11 +252,6 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
           namespace: "aws:elasticbeanstalk:environment",
           optionName: "LoadBalancerType",
           value: "application",
-        },
-        {
-          namespace: "aws:elasticbeanstalk:command",
-          optionName: "DeploymentPolicy",
-          value: "Rolling",
         },
       ],
       versionLabel: applicationVersion.ref,
