@@ -45,12 +45,17 @@ function railsEnvironmentVariables(
   return envVars;
 }
 
+export interface SecretValueProps {
+  readonly secretId: string;
+  readonly jsonField: string;
+}
+
 export interface DatabaseAccessOptions {
-  instance: IDatabaseInstance | DatabaseInstanceAttributes;
-  securityGroup: ISecurityGroup | string;
-  username: string;
-  password: SecretValue | string;
-  databaseName: string;
+  readonly instance: IDatabaseInstance | DatabaseInstanceAttributes;
+  readonly securityGroup: ISecurityGroup | string;
+  readonly username: string;
+  readonly password: SecretValue | SecretValueProps | string;
+  readonly databaseName: string;
 }
 
 export interface DatabaseAccess {
@@ -91,6 +96,20 @@ export interface RailsEnvironmentProps
   ec2RoleManagedPolicies?: IManagedPolicy[];
 }
 
+function resolveSecretValue(value: SecretValue | SecretValueProps | string) {
+  if (typeof value === "string") {
+    return SecretValue.secretsManager(value, {
+      jsonField: value,
+    });
+  } else if ("secretId" in value) {
+    return SecretValue.secretsManager(value.secretId, {
+      jsonField: value.jsonField,
+    });
+  } else {
+    return value;
+  }
+}
+
 function resolveDatabaseAccess(
   scope: Construct,
   options: DatabaseAccessOptions
@@ -113,12 +132,7 @@ function resolveDatabaseAccess(
           )
         : options.securityGroup,
     username: options.username,
-    password:
-      typeof options.password === "string"
-        ? SecretValue.secretsManager(options.password, {
-            jsonField: options.password,
-          })
-        : options.password,
+    password: resolveSecretValue(options.password),
     databaseName: options.databaseName,
   };
 }
