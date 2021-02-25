@@ -2,7 +2,7 @@ import {
   CfnApplicationVersion,
   CfnEnvironment,
 } from "@aws-cdk/aws-elasticbeanstalk";
-import { Construct } from "@aws-cdk/core";
+import { Construct, IResolvable } from "@aws-cdk/core";
 import { IVpc, ISecurityGroup } from "@aws-cdk/aws-ec2";
 import { CfnInstanceProfile } from "@aws-cdk/aws-iam";
 
@@ -252,6 +252,11 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
           namespace: "aws:elasticbeanstalk:environment",
           optionName: "LoadBalancerType",
           value: "application",
+        },
+        {
+          namespace: "aws:elbv2:listener:443",
+          optionName: "ListenerEnabled",
+          value: "true",
         },
       ],
       versionLabel: applicationVersion.ref,
