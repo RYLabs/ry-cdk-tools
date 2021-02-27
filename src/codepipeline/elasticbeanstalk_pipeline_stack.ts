@@ -20,17 +20,17 @@ function encryptionKeyPolicyStatement(key?: IKey): PolicyStatement[] {
 
   return [
     new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: [
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey*",
-          "kms:DescribeKey",
-        ],
-        resources: [ key.keyArn ],
+      effect: Effect.ALLOW,
+      actions: [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey",
+      ],
+      resources: [key.keyArn],
     }),
-  ]
+  ];
 }
 
 /**
@@ -94,7 +94,9 @@ export class ElasticbeanstalkPipelineStack extends BasePipelineStack {
               `arn:aws:s3:::elasticbeanstalk-${this.region}-${this.account}/resources/environments/*`,
             ],
           }),
-          ...(encryptionKeyPolicyStatement(this.pipeline.artifactBucket.encryptionKey)),
+          ...encryptionKeyPolicyStatement(
+            this.pipeline.artifactBucket.encryptionKey
+          ),
         ],
       });
       s3AccessPolicy.attachToRole(role);
