@@ -4,12 +4,14 @@ import BasePipelineStack, {
 } from "./base_pipeline_stack";
 import { ElasticBeanstalkDeployAction } from "./actions/elasticbeanstalk_deploy_action";
 import { CfnEnvironment } from "@aws-cdk/aws-elasticbeanstalk";
+import { PolicyStatement, Effect, IRole, Policy } from "@aws-cdk/aws-iam";
 
 export interface ElasticbeanstalkPipelineStackProps
   extends BasePipelineStackProps {
   readonly applicationName?: string;
   readonly environmentName?: string;
   readonly environment?: CfnEnvironment;
+  readonly role?: IRole;
 }
 
 /**
@@ -30,6 +32,7 @@ export class ElasticbeanstalkPipelineStack extends BasePipelineStack {
     const {
       applicationName = environment?.applicationName,
       environmentName = environment?.environmentName,
+      role,
     } = props;
 
     if (!applicationName)
@@ -50,5 +53,24 @@ export class ElasticbeanstalkPipelineStack extends BasePipelineStack {
         }),
       ],
     });
+
+    // Setup policy so instance profile instances can download from the artifact bucket.
+    if (role) {
+      const s3AccessPolicy = new Policy(this, "s3AccessPolicy", {
+        policyName: `${this.conventions.eqn(
+          "camel"
+        )}ReadOnlyArtifactBucketPolicy`,
+        statements: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [
+              `arn:aws:s3:::${this.pipeline.artifactBucket.bucketName}/*`,
+            ],
+          }),
+        ],
+      });
+      s3AccessPolicy.attachToRole(role);
+    }
   }
 }
