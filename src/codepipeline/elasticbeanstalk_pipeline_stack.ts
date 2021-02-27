@@ -68,6 +68,13 @@ export class ElasticbeanstalkPipelineStack extends BasePipelineStack {
               `arn:aws:s3:::${this.pipeline.artifactBucket.bucketName}/*`,
             ],
           }),
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ["s3:PutObject"],
+            resources: [
+              `arn:aws:s3:::elasticbeanstalk-${this.region}-${this.account}/resources/environments/*`,
+            ],
+          }),
         ],
       });
       s3AccessPolicy.attachToRole(role);
