@@ -62,6 +62,8 @@ export class RailsStack extends BaseStack {
    */
   readonly ebEnvironment: CfnEnvironment;
 
+  readonly railsEnvironment: RailsEnvironment;
+
   constructor(scope: App, id: string, props: RailsStackProps) {
     super(scope, id, {
       description: `Elasticbeanstalk setup for ${id}`,
@@ -134,5 +136,6 @@ export class RailsStack extends BaseStack {
 
     this.ebApplication = application;
     this.ebEnvironment = railsEnvironment.ebEnvironment;
+    this.railsEnvironment = railsEnvironment;
   }
 }

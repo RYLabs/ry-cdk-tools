@@ -2,7 +2,7 @@ import {
   CfnApplicationVersion,
   CfnEnvironment,
 } from "@aws-cdk/aws-elasticbeanstalk";
-import { Construct, IResolvable } from "@aws-cdk/core";
+import { Construct } from "@aws-cdk/core";
 import { IVpc, ISecurityGroup } from "@aws-cdk/aws-ec2";
 import { CfnInstanceProfile } from "@aws-cdk/aws-iam";
 

@@ -139,6 +139,7 @@ function resolveDatabaseAccess(
 
 export class RailsEnvironment extends Construct {
   ebEnvironment: ElasticbeanstalkEnvironment;
+  role: Role;
 
   constructor(scope: Construct, id: string, props: RailsEnvironmentProps) {
     super(scope, id);
@@ -198,5 +199,6 @@ export class RailsEnvironment extends Construct {
     });
 
     this.ebEnvironment = ebEnv;
+    this.role = role;
   }
 }
