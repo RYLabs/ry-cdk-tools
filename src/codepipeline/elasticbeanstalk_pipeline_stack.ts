@@ -5,6 +5,7 @@ import BasePipelineStack, {
 import { ElasticBeanstalkDeployAction } from "./actions/elasticbeanstalk_deploy_action";
 import { CfnEnvironment } from "@aws-cdk/aws-elasticbeanstalk";
 import { PolicyStatement, Effect, IRole, Policy } from "@aws-cdk/aws-iam";
+import { IKey } from "@aws-cdk/aws-kms";
 
 export interface ElasticbeanstalkPipelineStackProps
   extends BasePipelineStackProps {
@@ -12,6 +13,24 @@ export interface ElasticbeanstalkPipelineStackProps
   readonly environmentName?: string;
   readonly environment?: CfnEnvironment;
   readonly role?: IRole;
+}
+
+function encryptionKeyPolicyStatement(key?: IKey): PolicyStatement[] {
+  if (!key) return [];
+
+  return [
+    new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey",
+        ],
+        resources: [ key.keyArn ],
+    }),
+  ]
 }
 
 /**
@@ -75,6 +94,7 @@ export class ElasticbeanstalkPipelineStack extends BasePipelineStack {
               `arn:aws:s3:::elasticbeanstalk-${this.region}-${this.account}/resources/environments/*`,
             ],
           }),
+          ...(encryptionKeyPolicyStatement(this.pipeline.artifactBucket.encryptionKey)),
         ],
       });
       s3AccessPolicy.attachToRole(role);
