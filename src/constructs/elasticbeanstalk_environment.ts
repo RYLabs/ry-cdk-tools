@@ -132,6 +132,35 @@ function commandSettings({
   }, [] as CfnEnvironment.OptionSettingProperty[]);
 }
 
+function sslSettings(
+  sslCertificateArns?: string
+): CfnEnvironment.OptionSettingProperty[] {
+  if (!sslCertificateArns) return [];
+
+  return [
+    {
+      namespace: "aws:elbv2:listener:443",
+      optionName: "DefaultProcess",
+      value: "default",
+    },
+    {
+      namespace: "aws:elbv2:listener:443",
+      optionName: "ListenerEnabled",
+      value: "true",
+    },
+    {
+      namespace: "aws:elbv2:listener:443",
+      optionName: "Protocol",
+      value: "HTTPS",
+    },
+    {
+      namespace: "aws:elbv2:listener:443",
+      optionName: "SSLCertificateArns",
+      value: sslCertificateArns,
+    },
+  ];
+}
+
 function isInstanceProfile(
   profile: CfnInstanceProfile | string
 ): profile is CfnInstanceProfile {
@@ -170,6 +199,7 @@ export interface ElasticbeanstalkEnvironmentProps {
   readonly environmentVariables?: EBEnvironmentVariable[];
   readonly defaultProcess?: EBProcessSettings;
   readonly command?: EBCommandSettings;
+  readonly sslCertificateArns?: string;
 }
 
 export class ElasticbeanstalkEnvironment extends CfnEnvironment {
@@ -193,6 +223,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
       environmentVariables,
       defaultProcess = {},
       command = {},
+      sslCertificateArns,
     } = props;
 
     let _iamInstanceProfile;
@@ -218,6 +249,7 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
         ...environmentVariableSettings(environmentVariables),
         ...defaultProcessSettings(defaultProcess),
         ...commandSettings(command),
+        ...sslSettings(sslCertificateArns),
         {
           namespace: "aws:autoscaling:launchconfiguration",
           optionName: "SecurityGroups",
@@ -252,11 +284,6 @@ export class ElasticbeanstalkEnvironment extends CfnEnvironment {
           namespace: "aws:elasticbeanstalk:environment",
           optionName: "LoadBalancerType",
           value: "application",
-        },
-        {
-          namespace: "aws:elbv2:listener:443",
-          optionName: "ListenerEnabled",
-          value: "true",
         },
       ],
       versionLabel: applicationVersion.ref,
