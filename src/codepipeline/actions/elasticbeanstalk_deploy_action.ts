@@ -46,7 +46,7 @@ export class ElasticBeanstalkDeployAction implements IAction {
   ): ActionConfig {
     options.bucket.grantRead(options.role);
     options.role.addManagedPolicy(
-      ManagedPolicy.fromAwsManagedPolicyName("AWSElasticBeanstalkFullAccess")
+      ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess-AWSElasticBeanstalk")
     );
 
     return {
